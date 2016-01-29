@@ -1,35 +1,37 @@
-classdef OldSlice < edu.washington.rieke.rigs.RiekeRigDescription
+classdef OldSlice < symphonyui.core.descriptions.RigDescription
     
     methods
         
         function obj = OldSlice()
             import symphonyui.builtin.daqs.*;
             import symphonyui.builtin.devices.*;
+            import symphonyui.core.*;
             
-            daq = HekaSimulationDaqController();
+            daq = HekaDaqController();
             
-            amp = MultiClampDevice('Amp', 1).bindStream(daq.getStream('ANALOG_OUT.0')).bindStream(daq.getStream('ANALOG_IN.0'));
+            amp = MultiClampDevice('Amp1', 1).bindStream(daq.getStream('ANALOG_OUT.0')).bindStream(daq.getStream('ANALOG_IN.0'));
             
             red = UnitConvertingDevice('Red LED', 'V').bindStream(daq.getStream('ANALOG_OUT.1'));
-            addCalibrationDataToDevice(red, [calibrationDataPath filesep 'rigs\oldSlice\redLED']);
-           
+            red.addStaticConfigurationDescriptor(PropertyDescriptor('ndfs', {}, ...
+                'type', PropertyType('cellstr', 'row', {'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7'})));
+            red.addStaticConfigurationDescriptor(PropertyDescriptor('gain', '', ...
+                'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'})));
+            red.addStaticConfigurationDescriptor(PropertyDescriptor('powerToIntensity', 0));
+            
             green = UnitConvertingDevice('Green LED', 'V').bindStream(daq.getStream('ANALOG_OUT.2'));
-            addCalibrationDataToDevice(green, [calibrationDataPath filesep 'rigs\oldSlice\greenLED']);
+            green.addStaticConfigurationDescriptor(PropertyDescriptor('ndfs', {}, ...
+                'type', PropertyType('cellstr', 'row', {'F1', 'F2', 'F3', 'F4', 'F5', 'F8', 'F9'})));
+            green.addStaticConfigurationDescriptor(PropertyDescriptor('gain', '', ...
+                'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'})));
             
             uv = UnitConvertingDevice('UV LED', 'V').bindStream(daq.getStream('ANALOG_OUT.3'));
-            addCalibrationDataToDevice(uv, [calibrationDataPath filesep 'rigs\oldSlice\uvLED']);
-           
-            trigger1 = UnitConvertingDevice('Trigger1', symphonyui.core.Measurement.UNITLESS).bindStream(daq.getStream('DIGITAL_OUT.1'));
-            daq.getStream('DIGITAL_OUT.1').setBitPosition(trigger1, 0);
-            
-            trigger2 = UnitConvertingDevice('Trigger2', symphonyui.core.Measurement.UNITLESS).bindStream(daq.getStream('DIGITAL_OUT.1'));
-            daq.getStream('DIGITAL_OUT.1').setBitPosition(trigger2, 2);
+            uv.addStaticConfigurationDescriptor(PropertyDescriptor('ndfs', {}, ...
+                'type', PropertyType('cellstr', 'row', {'F1', 'F2', 'F3', 'F4', 'F5', 'F10', 'F11'})));
+            uv.addStaticConfigurationDescriptor(PropertyDescriptor('gain', '', ...
+                'type', PropertyType('char', 'row', {'', 'low', 'medium'})));
             
             obj.daqController = daq;
-            obj.devices = {amp, red, green, uv, trigger1, trigger2};
-           
-            % call superclass method to save rig info file
-            obj.saveRigInfoFile();
+            obj.devices = {amp, red, green, uv};
         end
         
     end
