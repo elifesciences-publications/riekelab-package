@@ -46,16 +46,26 @@ classdef LedPulse < symphonyui.core.Protocol
         
         function stim = ledStimulus(obj)
             device = obj.rig.getDevice(obj.led);
-            disp(device.configuration('ndfs'));
-            disp(device.configuration('gain'));
+            
+            settings = device.getConfigurationSettingDescriptors().toMap();
+            disp(settings('ndfs'));
+            disp(settings('gain'));
+            
+            spectrum = device.getResource('spectrum');
+            disp(spectrum);
             
             if ~isempty(obj.persistor)
                 if ~isempty(obj.persistor.currentEpochGroup)
-                    disp(obj.persistor.currentEpochGroup.source.propertyMap('species'));
+                    source = obj.persistor.currentEpochGroup.source;
+                    properties = source.getPropertyDescriptors().toMap();
+                    disp(properties('species'));
+                    
+                    photoreceptors = source.getResource('photoreceptors');
+                    disp(photoreceptors);
+                    disp(photoreceptors('mCone'));
                 end
             end
-            
-            
+                        
             gen = symphonyui.builtin.stimuli.PulseGenerator();
             
             gen.preTime = obj.preTime;

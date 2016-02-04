@@ -5,28 +5,25 @@ classdef OldSliceOld < edu.washington.rieke.rigs.RiekeRigDescription
         function obj = OldSliceOld()
             import symphonyui.builtin.daqs.*;
             import symphonyui.builtin.devices.*;
+            import symphonyui.core.*;
             
             daq = HekaSimulationDaqController();
+            obj.daqController = daq;
             
-            amp = MultiClampDevice('Amp', 1).bindStream(daq.getStream('ANALOG_OUT.0')).bindStream(daq.getStream('ANALOG_IN.0'));
+            amp1 = MultiClampDevice('Amp', 1).bindStream(daq.getStream('ANALOG_OUT.0')).bindStream(daq.getStream('ANALOG_IN.0'));
+            obj.addDevice(amp1);
             
             red = UnitConvertingDevice('Red LED', 'V').bindStream(daq.getStream('ANALOG_OUT.1'));
             addCalibrationDataToDevice(red, [calibrationDataPath filesep 'rigs\oldSlice\redLED']);
-           
+            obj.addDevice(red);
+            
             green = UnitConvertingDevice('Green LED', 'V').bindStream(daq.getStream('ANALOG_OUT.2'));
             addCalibrationDataToDevice(green, [calibrationDataPath filesep 'rigs\oldSlice\greenLED']);
+            obj.addDevice(green);
             
             uv = UnitConvertingDevice('UV LED', 'V').bindStream(daq.getStream('ANALOG_OUT.3'));
             addCalibrationDataToDevice(uv, [calibrationDataPath filesep 'rigs\oldSlice\uvLED']);
-           
-            trigger1 = UnitConvertingDevice('Trigger1', symphonyui.core.Measurement.UNITLESS).bindStream(daq.getStream('DIGITAL_OUT.1'));
-            daq.getStream('DIGITAL_OUT.1').setBitPosition(trigger1, 0);
-            
-            trigger2 = UnitConvertingDevice('Trigger2', symphonyui.core.Measurement.UNITLESS).bindStream(daq.getStream('DIGITAL_OUT.1'));
-            daq.getStream('DIGITAL_OUT.1').setBitPosition(trigger2, 2);
-            
-            obj.daqController = daq;
-            obj.devices = {amp, red, green, uv, trigger1, trigger2};
+            obj.addDevice(uv);
            
             % call superclass method to save rig info file
             obj.saveRigInfoFile();

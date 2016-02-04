@@ -5,20 +5,17 @@ classdef ZebrafishSubject < edu.washington.rieke.sources.Subject
         function obj = ZebrafishSubject()
             import symphonyui.core.*;
             
-            obj.propertyDescriptors = [ ...
-                obj.propertyDescriptors, ...
-                PropertyDescriptor('genotype', {}, ...
-                    'type', PropertyType('cellstr', 'row', {'wild type', 'VSX1:mCerulean', 'VSX2:?'}), ... 
-                    'description', 'Genetic strain'), ...
-                ];
+            obj.addProperty('genotype', {}, ...
+                'type', PropertyType('cellstr', 'row', {'wild type', 'VSX1:mCerulean', 'VSX2:?'}), ... 
+                'description', 'Genetic strain');
             
             photoreceptors = containers.Map();
-            photoreceptors('lCone')     = struct('collectingArea', 0.55, 'spectrum', obj.L_CONE_SPECTRUM);
-            photoreceptors('mCone')     = struct('collectingArea', 0.55, 'spectrum', obj.M_CONE_SPECTRUM);
-            photoreceptors('rod')       = struct('collectingArea', 0.63, 'spectrum', obj.ROD_SPECTRUM);
-            photoreceptors('sCone')     = struct('collectingArea', 0.55, 'spectrum', obj.S_CONE_SPECTRUM);
-            photoreceptors('uvCone')    = struct('collectingArea', 0.55, 'spectrum', obj.UV_CONE_SPECTRUM);
-            obj.resources('photoreceptors') = photoreceptors;
+            photoreceptors('lCone')  = struct('collectingArea', 0.55, 'spectrum', obj.L_CONE_SPECTRUM);
+            photoreceptors('mCone')  = struct('collectingArea', 0.55, 'spectrum', obj.M_CONE_SPECTRUM);
+            photoreceptors('rod')    = struct('collectingArea', 0.63, 'spectrum', obj.ROD_SPECTRUM);
+            photoreceptors('sCone')  = struct('collectingArea', 0.55, 'spectrum', obj.S_CONE_SPECTRUM);
+            photoreceptors('uvCone') = struct('collectingArea', 0.55, 'spectrum', obj.UV_CONE_SPECTRUM);
+            obj.addResource('photoreceptors', photoreceptors);
         end
         
     end

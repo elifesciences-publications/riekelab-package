@@ -5,19 +5,16 @@ classdef PrimateSubject < edu.washington.rieke.sources.Subject
         function obj = PrimateSubject()
             import symphonyui.core.*;
             
-            obj.propertyDescriptors = [ ...
-                obj.propertyDescriptors, ...
-                PropertyDescriptor('species', '', ...
-                    'type', PropertyType('char', 'row', {'', 'M. mulatta', 'M. fascicularis', 'M. nemestrina'}), ... 
-                    'description', 'Species'), ...
-                ];
+            obj.addProperty('species', '', ...
+                'type', PropertyType('char', 'row', {'', 'M. mulatta', 'M. fascicularis', 'M. nemestrina'}), ... 
+                'description', 'Species');
             
             photoreceptors = containers.Map();
-            photoreceptors('lCone')     = struct('collectingArea', 0.37, 'spectrum', obj.L_CONE_SPECTRUM);
-            photoreceptors('mCone')     = struct('collectingArea', 0.37, 'spectrum', obj.M_CONE_SPECTRUM);
-            photoreceptors('rod')       = struct('collectingArea', 1.00, 'spectrum', obj.ROD_SPECTRUM);
-            photoreceptors('sCone')     = struct('collectingArea', 0.37, 'spectrum', obj.S_CONE_SPECTRUM);
-            obj.resources('photoreceptors') = photoreceptors;
+            photoreceptors('lCone') = struct('collectingArea', 0.37, 'spectrum', obj.L_CONE_SPECTRUM);
+            photoreceptors('mCone') = struct('collectingArea', 0.37, 'spectrum', obj.M_CONE_SPECTRUM);
+            photoreceptors('rod')   = struct('collectingArea', 1.00, 'spectrum', obj.ROD_SPECTRUM);
+            photoreceptors('sCone') = struct('collectingArea', 0.37, 'spectrum', obj.S_CONE_SPECTRUM);
+            obj.addResource('photoreceptors', photoreceptors);
         end
         
     end

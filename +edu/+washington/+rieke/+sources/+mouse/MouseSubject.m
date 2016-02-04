@@ -5,18 +5,15 @@ classdef MouseSubject < edu.washington.rieke.sources.Subject
         function obj = MouseSubject()
             import symphonyui.core.*;
             
-            obj.propertyDescriptors = [ ...
-                obj.propertyDescriptors, ...
-                PropertyDescriptor('genotype', {}, ...
-                    'type', PropertyType('cellstr', 'row', {'C57B6', 'Rho 19', 'Rho 18', 'STM', 'TTM', 'Arr1 KO', 'GRK1 KO', 'GCAP KO', 'GJD2-GFP', 'DACT2-GFP', 'PLCXD2-GFP', 'NeuroD6 Cre', 'Grm6-tdTomato', 'Grm6-cre1', 'Ai27 (floxed ChR2-tdTomato)', 'Cx36-/-'}), ... 
-                    'description', 'Genetic strain'), ...
-                ];
+            obj.addProperty('genotype', {}, ...
+                'type', PropertyType('cellstr', 'row', {'C57B6', 'Rho 19', 'Rho 18', 'STM', 'TTM', 'Arr1 KO', 'GRK1 KO', 'GCAP KO', 'GJD2-GFP', 'DACT2-GFP', 'PLCXD2-GFP', 'NeuroD6 Cre', 'Grm6-tdTomato', 'Grm6-cre1', 'Ai27 (floxed ChR2-tdTomato)', 'Cx36-/-'}), ... 
+                'description', 'Genetic strain');
             
             photoreceptors = containers.Map();
-            photoreceptors('mCone')     = struct('collectingArea', 0.20, 'spectrum', obj.M_CONE_SPECTRUM);
-            photoreceptors('rod')       = struct('collectingArea', 0.50, 'spectrum', obj.ROD_SPECTRUM);
-            photoreceptors('sCone')     = struct('collectingArea', 0.20, 'spectrum', obj.S_CONE_SPECTRUM);
-            obj.resources('photoreceptors') = photoreceptors;
+            photoreceptors('mCone') = struct('collectingArea', 0.20, 'spectrum', obj.M_CONE_SPECTRUM);
+            photoreceptors('rod')   = struct('collectingArea', 0.50, 'spectrum', obj.ROD_SPECTRUM);
+            photoreceptors('sCone') = struct('collectingArea', 0.20, 'spectrum', obj.S_CONE_SPECTRUM);
+            obj.addResource('photoreceptors', photoreceptors);
         end
         
     end
