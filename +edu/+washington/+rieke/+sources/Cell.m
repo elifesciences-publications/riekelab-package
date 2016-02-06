@@ -1,4 +1,4 @@
-classdef (Abstract) Cell < symphonyui.core.descriptions.SourceDescription
+classdef (Abstract) Cell < symphonyui.core.persistent.descriptions.SourceDescription
     
     methods
         

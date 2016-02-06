@@ -1,8 +1,8 @@
-classdef ZebrafishSubject < edu.washington.rieke.sources.Subject
+classdef Zebrafish < edu.washington.rieke.sources.Subject
     
     methods
         
-        function obj = ZebrafishSubject()
+        function obj = Zebrafish()
             import symphonyui.core.*;
             
             obj.addProperty('genotype', {}, ...
@@ -16,6 +16,8 @@ classdef ZebrafishSubject < edu.washington.rieke.sources.Subject
             photoreceptors('sCone')  = struct('collectingArea', 0.55, 'spectrum', obj.S_CONE_SPECTRUM);
             photoreceptors('uvCone') = struct('collectingArea', 0.55, 'spectrum', obj.UV_CONE_SPECTRUM);
             obj.addResource('photoreceptors', photoreceptors);
+            
+            obj.addAllowableParentType([]);
         end
         
     end

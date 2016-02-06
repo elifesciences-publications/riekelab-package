@@ -1,8 +1,8 @@
-classdef PrimateSubject < edu.washington.rieke.sources.Subject
+classdef Primate < edu.washington.rieke.sources.Subject
     
     methods
         
-        function obj = PrimateSubject()
+        function obj = Primate()
             import symphonyui.core.*;
             
             obj.addProperty('species', '', ...
@@ -15,6 +15,8 @@ classdef PrimateSubject < edu.washington.rieke.sources.Subject
             photoreceptors('rod')   = struct('collectingArea', 1.00, 'spectrum', obj.ROD_SPECTRUM);
             photoreceptors('sCone') = struct('collectingArea', 0.37, 'spectrum', obj.S_CONE_SPECTRUM);
             obj.addResource('photoreceptors', photoreceptors);
+            
+            obj.addAllowableParentType([]);
         end
         
     end

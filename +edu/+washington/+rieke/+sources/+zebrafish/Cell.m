@@ -1,11 +1,11 @@
-classdef ZebrafishCell < edu.washington.rieke.sources.Cell
+classdef Cell < edu.washington.rieke.sources.Cell
     
     methods
         
-        function obj = ZebrafishCell()
+        function obj = Cell()
             import symphonyui.core.*;
             
-            obj.addProperty('type', '[>, unknown]', ...
+            obj.addProperty('type', 'unknown', ...
                 'type', PropertyType('char', 'row', containers.Map( ...
                     {'unknown', 'RGC', 'amacrine', 'bipolar', 'horizontal', 'photoreceptor'}, ...
                     {{}, ...
@@ -15,6 +15,8 @@ classdef ZebrafishCell < edu.washington.rieke.sources.Cell
                     {}, ...
                     {'UV cone', 'S cone', 'M cone', 'rod'}})), ...
                 'description', 'The confirmed type of the recorded cell');
+            
+            obj.addAllowableParentType('edu.washington.rieke.sources.zebrafish.Preparation');
         end
         
     end

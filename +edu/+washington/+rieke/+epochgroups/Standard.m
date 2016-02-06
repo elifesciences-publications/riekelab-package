@@ -1,4 +1,4 @@
-classdef Standard < symphonyui.core.descriptions.EpochGroupDescription
+classdef Standard < symphonyui.core.persistent.descriptions.EpochGroupDescription
     
     methods
         
@@ -14,6 +14,8 @@ classdef Standard < symphonyui.core.descriptions.EpochGroupDescription
                 'type', PropertyType('char', 'row', {'', 'cell-attached', 'whole-cell', 'perforated patch', 'suction'}));
             obj.addProperty('seriesResistanceCompensation', int32(0), ...
                 'type', PropertyType('int32', 'scalar', [0 100]));
+            
+            obj.addAllowableParentType([]);
         end
         
     end

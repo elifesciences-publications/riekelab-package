@@ -1,8 +1,8 @@
-classdef MouseSubject < edu.washington.rieke.sources.Subject
+classdef Mouse < edu.washington.rieke.sources.Subject
     
     methods
         
-        function obj = MouseSubject()
+        function obj = Mouse()
             import symphonyui.core.*;
             
             obj.addProperty('genotype', {}, ...
@@ -14,6 +14,8 @@ classdef MouseSubject < edu.washington.rieke.sources.Subject
             photoreceptors('rod')   = struct('collectingArea', 0.50, 'spectrum', obj.ROD_SPECTRUM);
             photoreceptors('sCone') = struct('collectingArea', 0.20, 'spectrum', obj.S_CONE_SPECTRUM);
             obj.addResource('photoreceptors', photoreceptors);
+            
+            obj.addAllowableParentType([]);
         end
         
     end
