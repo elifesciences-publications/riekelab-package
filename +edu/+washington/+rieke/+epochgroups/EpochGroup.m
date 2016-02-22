@@ -1,8 +1,8 @@
-classdef Standard < symphonyui.core.persistent.descriptions.EpochGroupDescription
+classdef (Abstract) EpochGroup < symphonyui.core.persistent.descriptions.EpochGroupDescription
     
     methods
         
-        function obj = Standard()
+        function obj = EpochGroup()
             import symphonyui.core.*;
             
             obj.addProperty('externalSolutionAdditions', {}, ...
@@ -14,8 +14,6 @@ classdef Standard < symphonyui.core.persistent.descriptions.EpochGroupDescriptio
                 'type', PropertyType('char', 'row', {'', 'cell-attached', 'whole-cell', 'perforated patch', 'suction'}));
             obj.addProperty('seriesResistanceCompensation', int32(0), ...
                 'type', PropertyType('int32', 'scalar', [0 100]));
-            
-            obj.addAllowableParentType([]);
         end
         
     end
