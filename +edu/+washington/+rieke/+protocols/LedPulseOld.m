@@ -25,20 +25,15 @@ classdef LedPulseOld < symphonyui.core.Protocol
     
     methods
         
-        function onSetRig(obj)
-            onSetRig@symphonyui.core.Protocol(obj);
+        function didSetRig(obj)
+            didSetRig@symphonyui.core.Protocol(obj);
             
-            amps = appbox.firstNonEmpty(obj.rig.getDeviceNames('Amp'), {'(None)'});
-            obj.amp = amps{1};
-            obj.ampType = symphonyui.core.PropertyType('char', 'row', amps);
-            
-            leds = appbox.firstNonEmpty(obj.rig.getDeviceNames('LED'), {'(None)'});
-            obj.led = leds{1};
-            obj.ledType = symphonyui.core.PropertyType('char', 'row', leds);
+            [obj.led, obj.ledType] = obj.createDeviceNamesProperty('LED');
+            [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
-        function onSetPersistor(obj)
-            onSetPersistor@symphonyui.core.Protocol(obj);
+        function didSetPersistor(obj)
+            didSetPersistor@symphonyui.core.Protocol(obj);
             
             cellTypes = appbox.firstNonEmpty(obj.possibleCellTypes, {'(None)'});
             obj.referenceCellType = symphonyui.core.PropertyType('char', 'row', cellTypes);
