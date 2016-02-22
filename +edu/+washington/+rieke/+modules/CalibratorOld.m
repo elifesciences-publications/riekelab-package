@@ -265,7 +265,7 @@ classdef CalibratorOld < symphonyui.ui.Module
     % Initialize things
     methods (Access = protected)
         
-        function onGoing(obj)
+        function willGo(obj)
             % get a list of the devices
             obj.createDeviceList();
             obj.grabAndAddDeviceData();

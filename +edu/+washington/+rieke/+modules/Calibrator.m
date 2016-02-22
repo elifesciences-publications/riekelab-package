@@ -88,7 +88,7 @@ classdef Calibrator < symphonyui.ui.Module
     
     methods (Access = protected)
         
-        function onGoing(obj)
+        function willGo(obj)
             obj.populateDeviceList();
         end
         
