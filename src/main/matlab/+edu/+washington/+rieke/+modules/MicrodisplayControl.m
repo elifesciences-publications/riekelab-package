@@ -41,11 +41,13 @@ classdef MicrodisplayControl < symphonyui.ui.Module
     methods (Access = protected)
 
         function willGo(obj)
-            displays = obj.configurationService.getDevices('Microdisplay');
-            if ~isempty(displays)
-                obj.microdisplay = displays{1};
+            devices = obj.configurationService.getDevices('Microdisplay');
+            if isempty(devices)
+                set(obj.brightnessPopupMenu, 'Enable', 'off');
+                return;
             end
             
+            obj.microdisplay = devices{1};
             obj.populateBrightnessList();
         end
 
@@ -60,11 +62,6 @@ classdef MicrodisplayControl < symphonyui.ui.Module
             values = {MicrodisplayBrightness.MINIMUM, MicrodisplayBrightness.LOW, MicrodisplayBrightness.MEDIUM, MicrodisplayBrightness.HIGH, MicrodisplayBrightness.MAXIMUM};
             set(obj.brightnessPopupMenu, 'String', names);
             set(obj.brightnessPopupMenu, 'Values', values);
-            
-            if isempty(obj.microdisplay)
-                set(obj.brightnessPopupMenu, 'Enable', 'off');
-                return;
-            end
             
             brightness = obj.microdisplay.getBrightness();
             set(obj.brightnessPopupMenu, 'Value', brightness);
