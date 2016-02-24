@@ -7,14 +7,15 @@ classdef MicrodisplayDevice < io.github.stage_vss.devices.StageDevice
     methods
         
         function obj = MicrodisplayDevice(gammaRamps)
-            obj@io.github.stage_vss.devices.StageDevice();
-            obj.cobj.Name = ['Microdisplay.' obj.name];
+            host = 'localhost';
+            port = 5678;
+            obj@io.github.stage_vss.devices.StageDevice(host, port, 'name', ['Microdisplay.Stage@' host]);
             
             obj.microdisplay = Microdisplay();
             obj.microdisplay.connect();
             
-            obj.addConfigurationSetting('brightness', '', 'isReadOnly', true);
-            obj.addConfigurationSetting('brightnessValue', 0, 'isReadOnly', true);
+            obj.addConfigurationSetting('microdisplayBrightness', '', 'isReadOnly', true);
+            obj.addConfigurationSetting('microdisplayBrightnessValue', 0, 'isReadOnly', true);
             obj.addResource('gammaRamps', gammaRamps);
             
             obj.setBrightness(edu.washington.rieke.devices.MicrodisplayBrightness.MINIMUM);
@@ -26,24 +27,24 @@ classdef MicrodisplayDevice < io.github.stage_vss.devices.StageDevice
             obj.microdisplay.disconnect();
         end
         
-        function r = gammaRampForBrightness(obj, b)
+        function r = gammaRampForBrightness(obj, brightness)
             gammaRamps = obj.getResource('gammaRamps');
             if strcmp(gammaRamps.KeyType, 'char') 
-                key = char(b);
+                key = char(brightness);
             else
-                key = b;
+                key = brightness;
             end
             r = gammaRamps(key);
         end
         
-        function setBrightness(obj, b)
-            b = edu.washington.rieke.devices.MicrodisplayBrightness(b);
+        function setBrightness(obj, brightness)
+            brightness = edu.washington.rieke.devices.MicrodisplayBrightness(brightness);
             
-            obj.microdisplay.setBrightness(uint8(b));
-            obj.setReadOnlyConfigurationSetting('brightness', char(b));
-            obj.setReadOnlyConfigurationSetting('brightnessValue', uint8(b));
+            obj.microdisplay.setBrightness(uint8(brightness));
+            obj.setReadOnlyConfigurationSetting('microdisplayBrightness', char(brightness));
+            obj.setReadOnlyConfigurationSetting('microdisplayBrightnessValue', uint8(brightness));
             
-            ramp = obj.gammaRampForBrightness(b);
+            ramp = obj.gammaRampForBrightness(brightness);
             obj.stageClient.setMonitorGammaRamp(ramp, ramp, ramp);
         end
         
