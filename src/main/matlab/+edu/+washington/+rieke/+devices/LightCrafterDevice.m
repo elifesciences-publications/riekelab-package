@@ -1,6 +1,6 @@
 classdef LightCrafterDevice < symphonyui.core.Device
     
-    properties (Access = private)
+    properties (Access = private, Transient)
         stageClient
         lightCrafter
         patternRatesToAttributes
@@ -56,9 +56,11 @@ classdef LightCrafterDevice < symphonyui.core.Device
         end
         
         function close(obj)
-            if ~isempty(obj.stageClient) && obj.stageClient.isConnected
+            try %#ok<TRYNC>
                 obj.stageClient.resetCanvasProjection();
                 obj.stageClient.resetCanvasRenderer();
+            end
+            if ~isempty(obj.stageClient)
                 obj.stageClient.disconnect();
             end
             if ~isempty(obj.lightCrafter)
@@ -97,7 +99,16 @@ classdef LightCrafterDevice < symphonyui.core.Device
             tracker.position = [canvasSize(1) - (canvasSize(1)/16), canvasSize(2)/2];
             presentation.addStimulus(tracker);
             
-            obj.stageClient.play(presentation, prerender);
+            trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)double(s.time + (1/s.patternRate) < presentation.duration));
+            presentation.addController(trackerColor);
+            
+            if prerender
+                player = stage.builtin.players.PrerenderedPlayer(presentation);
+            else
+                player = stage.builtin.players.RealtimePlayer(presentation);
+            end
+            player.setCompositor(stage.builtin.compositors.PatternCompositor());
+            obj.stageClient.play(player);
         end
         
         function replay(obj)

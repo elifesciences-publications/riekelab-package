@@ -1,6 +1,6 @@
 classdef MicrodisplayDevice < symphonyui.core.Device
     
-    properties (Access = private)
+    properties (Access = private, Transient)
         stageClient
         microdisplay
     end
@@ -70,7 +70,15 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             tracker.position = [canvasSize(1) + (canvasSize(1)/2), canvasSize(2)/2];
             presentation.addStimulus(tracker);
             
-            obj.stageClient.play(presentation, prerender);
+            trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)double(s.time + (1/s.frameRate) < presentation.duration));
+            presentation.addController(trackerColor);
+            
+            if prerender
+                player = stage.builtin.players.PrerenderedPlayer(presentation);
+            else
+                player = stage.builtin.players.RealtimePlayer(presentation);
+            end
+            obj.stageClient.play(player);
         end
         
         function replay(obj)
