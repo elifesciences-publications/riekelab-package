@@ -73,12 +73,7 @@ classdef LightCrafterControl < symphonyui.ui.Module
         function willGo(obj)
             devices = obj.configurationService.getDevices('LightCrafter');
             if isempty(devices)
-                set(obj.ledEnablesCheckboxes.auto, 'Enable', 'off');
-                set(obj.ledEnablesCheckboxes.red, 'Enable', 'off');
-                set(obj.ledEnablesCheckboxes.green, 'Enable', 'off');
-                set(obj.ledEnablesCheckboxes.blue, 'Enable', 'off');
-                set(obj.patternRatePopupMenu, 'Enable', 'off');
-                return;
+                error('No LightCrafter device found');
             end
             
             obj.lightCrafter = devices{1};

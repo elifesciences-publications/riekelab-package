@@ -43,8 +43,7 @@ classdef MicrodisplayControl < symphonyui.ui.Module
         function willGo(obj)
             devices = obj.configurationService.getDevices('Microdisplay');
             if isempty(devices)
-                set(obj.brightnessPopupMenu, 'Enable', 'off');
-                return;
+                error('No Microdisplay device found');
             end
             
             obj.microdisplay = devices{1};
