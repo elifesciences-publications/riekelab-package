@@ -56,10 +56,14 @@ classdef LightCrafterDevice < symphonyui.core.Device
         end
         
         function close(obj)
-            %obj.stageClient.resetCanvasProjection();
-            %obj.stageClient.resetCanvasRenderer();
-            obj.stageClient.disconnect();
-            obj.lightCrafter.disconnect();
+            if ~isempty(obj.stageClient) && obj.stageClient.isConnected
+                obj.stageClient.resetCanvasProjection();
+                obj.stageClient.resetCanvasRenderer();
+                obj.stageClient.disconnect();
+            end
+            if ~isempty(obj.lightCrafter)
+                obj.lightCrafter.disconnect();
+            end
         end
         
         function s = getCanvasSize(obj)

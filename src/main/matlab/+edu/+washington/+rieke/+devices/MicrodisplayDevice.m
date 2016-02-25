@@ -38,8 +38,12 @@ classdef MicrodisplayDevice < symphonyui.core.Device
         end
         
         function close(obj)
-            obj.stageClient.disconnect();
-            obj.microdisplay.disconnect();
+            if ~isempty(obj.stageClient)
+                obj.stageClient.disconnect();
+            end
+            if ~isempty(obj.microdisplay)
+                obj.microdisplay.disconnect();
+            end
         end
         
         function s = getCanvasSize(obj)
@@ -64,7 +68,7 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             tracker = stage.builtin.stimuli.FrameTracker();
             tracker.size = canvasSize;
             tracker.position = [canvasSize(1) + (canvasSize(1)/2), canvasSize(2)/2];
-            presentation.addStimulus(obj.tracker);
+            presentation.addStimulus(tracker);
             
             obj.stageClient.play(presentation, prerender);
         end
