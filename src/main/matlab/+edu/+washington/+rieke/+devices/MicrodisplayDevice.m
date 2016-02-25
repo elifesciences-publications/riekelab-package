@@ -3,12 +3,11 @@ classdef MicrodisplayDevice < symphonyui.core.Device
     properties (Access = private)
         stageClient
         microdisplay
-        tracker
     end
     
     methods
         
-        function obj = MicrodisplayDevice(gammaRamps, varargin)            
+        function obj = MicrodisplayDevice(gammaRamps)            
             host = 'localhost';
             port = 5678;
             
@@ -28,16 +27,7 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             obj.microdisplay.setBrightness(uint8(brightness));
             
             trueCanvasSize = obj.stageClient.getCanvasSize();
-            canvasSize = trueCanvasSize .* [0.5, 1];
-            
-            ip = inputParser();
-            ip.addParameter('trackerSize', canvasSize);
-            ip.addParameter('trackerPosition', canvasSize/2 + [canvasSize(1), 0]);
-            ip.parse(varargin{:});
-            
-            obj.tracker = stage.builtin.stimuli.FrameTracker();
-            obj.tracker.size = ip.Results.trackerSize;
-            obj.tracker.position = ip.Results.trackerPosition;
+            canvasSize = [trueCanvasSize(1) * 0.5, trueCanvasSize(2)];
             
             obj.addConfigurationSetting('canvasSize', canvasSize, 'isReadOnly', true);
             obj.addConfigurationSetting('trueCanvasSize', trueCanvasSize, 'isReadOnly', true);
@@ -68,7 +58,14 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             if nargin < 3
                 prerender = false;
             end
+            
+            canvasSize = obj.getCanvasSize();
+            
+            tracker = stage.builtin.stimuli.FrameTracker();
+            tracker.size = canvasSize;
+            tracker.position = [canvasSize(1) + (canvasSize(1)/2), canvasSize(2)/2];
             presentation.addStimulus(obj.tracker);
+            
             obj.stageClient.play(presentation, prerender);
         end
         
