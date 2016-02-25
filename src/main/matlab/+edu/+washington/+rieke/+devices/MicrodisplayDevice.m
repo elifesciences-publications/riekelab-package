@@ -1,40 +1,92 @@
-classdef MicrodisplayDevice < io.github.stage_vss.devices.StageDevice
+classdef MicrodisplayDevice < symphonyui.core.Device
     
     properties (Access = private)
+        stageClient
         microdisplay
+        tracker
     end
     
     methods
         
-        function obj = MicrodisplayDevice(gammaRamps)
+        function obj = MicrodisplayDevice(gammaRamps, varargin)            
             host = 'localhost';
             port = 5678;
-            obj@io.github.stage_vss.devices.StageDevice(host, port, 'name', ['Microdisplay.Stage@' host]);
+            
+            cobj = Symphony.Core.UnitConvertingExternalDevice(['Microdisplay.Stage@' host], 'Unspecified', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
+            obj@symphonyui.core.Device(cobj);
+            obj.cobj.MeasurementConversionTarget = symphonyui.core.Measurement.UNITLESS;
+            
+            brightness = edu.washington.rieke.devices.MicrodisplayBrightness.MINIMUM;
+            ramp = gammaRamps(char(brightness));
+            
+            obj.stageClient = stage.core.network.StageClient();
+            obj.stageClient.connect(host, port);
+            obj.stageClient.setMonitorGammaRamp(ramp, ramp, ramp);
             
             obj.microdisplay = Microdisplay();
             obj.microdisplay.connect();
+            obj.microdisplay.setBrightness(uint8(brightness));
             
-            obj.addConfigurationSetting('microdisplayBrightness', '', 'isReadOnly', true);
-            obj.addConfigurationSetting('microdisplayBrightnessValue', 0, 'isReadOnly', true);
+            trueCanvasSize = obj.stageClient.getCanvasSize();
+            canvasSize = trueCanvasSize .* [0.5, 1];
+            
+            ip = inputParser();
+            ip.addParameter('trackerSize', canvasSize);
+            ip.addParameter('trackerPosition', canvasSize/2 + [canvasSize(1), 0]);
+            ip.parse(varargin{:});
+            
+            obj.tracker = stage.builtin.stimuli.FrameTracker();
+            obj.tracker.size = ip.Results.trackerSize;
+            obj.tracker.position = ip.Results.trackerPosition;
+            
+            obj.addConfigurationSetting('canvasSize', canvasSize, 'isReadOnly', true);
+            obj.addConfigurationSetting('trueCanvasSize', trueCanvasSize, 'isReadOnly', true);
+            obj.addConfigurationSetting('monitorRefreshRate', obj.stageClient.getMonitorRefreshRate(), 'isReadOnly', true);
+            obj.addConfigurationSetting('microdisplayBrightness', char(brightness), 'isReadOnly', true);
+            obj.addConfigurationSetting('microdisplayBrightnessValue', uint8(brightness), 'isReadOnly', true);
             obj.addResource('gammaRamps', gammaRamps);
-            
-            obj.setBrightness(edu.washington.rieke.devices.MicrodisplayBrightness.MINIMUM);
         end
         
         function close(obj)
-            close@io.github.stage_vss.devices.StageDevice(obj);
-            
+            obj.stageClient.disconnect();
             obj.microdisplay.disconnect();
+        end
+        
+        function s = getCanvasSize(obj)
+            s = obj.getConfigurationSetting('canvasSize');
+        end
+        
+        function s = getTrueCanvasSize(obj)
+            s = obj.getConfigurationSetting('trueCanvasSize');
+        end
+        
+        function r = getMonitorRefreshRate(obj)
+            r = obj.getConfigurationSetting('monitorRefreshRate');
+        end
+        
+        function play(obj, presentation, prerender)
+            if nargin < 3
+                prerender = false;
+            end
+            presentation.addStimulus(obj.tracker);
+            obj.stageClient.play(presentation, prerender);
+        end
+        
+        function replay(obj)
+            obj.stageClient.replay();
+        end
+        
+        function i = getPlayInfo(obj)
+            i = obj.stageClient.getPlayInfo();
+        end
+        
+        function clearMemory(obj)
+           obj.stageClient.clearMemory();
         end
         
         function r = gammaRampForBrightness(obj, brightness)
             gammaRamps = obj.getResource('gammaRamps');
-            if strcmp(gammaRamps.KeyType, 'char') 
-                key = char(brightness);
-            else
-                key = brightness;
-            end
-            r = gammaRamps(key);
+            r = gammaRamps(char(brightness));
         end
         
         function setBrightness(obj, brightness)
