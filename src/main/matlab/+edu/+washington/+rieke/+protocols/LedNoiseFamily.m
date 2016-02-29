@@ -63,6 +63,8 @@ classdef LedNoiseFamily < symphonyui.core.Protocol
             obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
                 'baselineRegion', [0 obj.preTime], ...
                 'measurementRegion', [obj.preTime obj.preTime+obj.stimTime]);
+            
+            obj.rig.getDevice(obj.led).background = symphonyui.core.Measurement(obj.lightMean, 'V');
         end
         
         function [stim, stdv] = createLedStimulus(obj, pulseNum, seed)
