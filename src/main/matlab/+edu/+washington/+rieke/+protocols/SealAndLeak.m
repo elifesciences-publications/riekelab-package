@@ -54,7 +54,7 @@ classdef SealAndLeak < symphonyui.core.Protocol
                 set(f, 'Name', 'Mode');
                 layout = uix.VBox('Parent', f);
                 uix.Empty('Parent', layout);
-                f.UserData.text = uicontrol( ...
+                obj.modeFigure.userData.text = uicontrol( ...
                     'Parent', layout, ...
                     'Style', 'text', ...
                     'FontSize', 48, ...
@@ -65,8 +65,7 @@ classdef SealAndLeak < symphonyui.core.Protocol
             end
             
             if isvalid(obj.modeFigure)
-                f = obj.modeFigure.getFigureHandle();
-                set(f.UserData.text, 'String', [obj.mode ' running...']);
+                set(obj.modeFigure.userData.text, 'String', [obj.mode ' running...']);
             end
         end
         
@@ -132,8 +131,7 @@ classdef SealAndLeak < symphonyui.core.Protocol
             end
             
             if isvalid(obj.modeFigure)
-                f = obj.modeFigure.getFigureHandle();
-                set(f.UserData.text, 'String', [obj.mode ' next']);
+                set(obj.modeFigure.userData.text, 'String', [obj.mode ' next']);
             end
         end
         
