@@ -37,6 +37,9 @@ classdef TwoPhoton < symphonyui.core.descriptions.RigDescription
             blue.addResource('spectrum', obj.BLUE_LED_SPECTRUM);
             obj.addDevice(blue);
             
+            temperature = UnitConvertingDevice('Temperature Controller', 'V', 'manufacturer', 'Warner Instruments').bindStream(daq.getStream('ANALOG_IN.6'));
+            obj.addDevice(temperature);
+            
             trigger = UnitConvertingDevice('Oscilloscope Trigger', symphonyui.core.Measurement.UNITLESS).bindStream(daq.getStream('DIGITAL_OUT.1'));
             daq.getStream('DIGITAL_OUT.1').setBitPosition(trigger, 0);
             obj.addDevice(trigger);        
