@@ -1,4 +1,4 @@
-classdef LedNoiseFamily < symphonyui.core.Protocol
+classdef LedNoiseFamily < edu.washington.rieke.protocols.RiekeProtocol
     
     properties
         led                             % Output LED
@@ -34,7 +34,7 @@ classdef LedNoiseFamily < symphonyui.core.Protocol
         end
         
         function didSetRig(obj)
-            didSetRig@symphonyui.core.Protocol(obj);
+            didSetRig@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             [obj.led, obj.ledType] = obj.createDeviceNamesProperty('LED');
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
@@ -57,7 +57,7 @@ classdef LedNoiseFamily < symphonyui.core.Protocol
         end
         
         function prepareRun(obj)
-            prepareRun@symphonyui.core.Protocol(obj);
+            prepareRun@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
@@ -89,9 +89,8 @@ classdef LedNoiseFamily < symphonyui.core.Protocol
             stim = gen.generate();
         end
         
-        
         function prepareEpoch(obj, epoch)
-            prepareEpoch@symphonyui.core.Protocol(obj, epoch);
+            prepareEpoch@edu.washington.rieke.protocols.RiekeProtocol(obj, epoch);
             
             persistent seed;
             if ~obj.useRandomSeed
@@ -110,7 +109,7 @@ classdef LedNoiseFamily < symphonyui.core.Protocol
         end
         
         function prepareInterval(obj, interval)
-            prepareInterval@symphonyui.core.Protocol(obj, interval);
+            prepareInterval@edu.washington.rieke.protocols.RiekeProtocol(obj, interval);
             
             device = obj.rig.getDevice(obj.led);
             interval.addDirectCurrentStimulus(device, device.background, obj.interpulseInterval, obj.sampleRate);

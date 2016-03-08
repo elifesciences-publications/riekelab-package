@@ -1,4 +1,4 @@
-classdef SealAndLeak < symphonyui.core.Protocol
+classdef SealAndLeak < edu.washington.rieke.protocols.RiekeProtocol
     
     properties
         amp                             % Output amplifier
@@ -32,7 +32,7 @@ classdef SealAndLeak < symphonyui.core.Protocol
         end
         
         function didSetRig(obj)
-            didSetRig@symphonyui.core.Protocol(obj);
+            didSetRig@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
@@ -46,7 +46,7 @@ classdef SealAndLeak < symphonyui.core.Protocol
         end
         
         function prepareRun(obj)
-            prepareRun@symphonyui.core.Protocol(obj);
+            prepareRun@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             if isempty(obj.modeFigure) || ~isvalid(obj.modeFigure)
                 obj.modeFigure = obj.showFigure('symphonyui.builtin.figures.CustomFigure', @null);
@@ -98,7 +98,14 @@ classdef SealAndLeak < symphonyui.core.Protocol
         end
         
         function prepareEpoch(obj, epoch)
-            prepareEpoch@symphonyui.core.Protocol(obj, epoch);
+            prepareEpoch@edu.washington.rieke.protocols.RiekeProtocol(obj, epoch);
+            
+            devices = obj.rig.getInputDevices();
+            for i = 1:numel(devices)
+                if epoch.hasResponse(devices{i})
+                    epoch.removeResponse(devices{i});
+                end
+            end
             
             epoch.addStimulus(obj.rig.getDevice(obj.amp), obj.createAmpStimulus());
             
@@ -120,7 +127,7 @@ classdef SealAndLeak < symphonyui.core.Protocol
         end
         
         function completeRun(obj)
-            completeRun@symphonyui.core.Protocol(obj);
+            completeRun@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             if obj.alternateMode
                 if strcmpi(obj.mode, 'seal')

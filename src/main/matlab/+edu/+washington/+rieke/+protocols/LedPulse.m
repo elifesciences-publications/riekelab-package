@@ -1,4 +1,4 @@
-classdef LedPulse < symphonyui.core.Protocol
+classdef LedPulse < edu.washington.rieke.protocols.RiekeProtocol
     
     properties
         led                             % Output LED
@@ -20,7 +20,7 @@ classdef LedPulse < symphonyui.core.Protocol
     methods
         
         function didSetRig(obj)
-            didSetRig@symphonyui.core.Protocol(obj);
+            didSetRig@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             [obj.led, obj.ledType] = obj.createDeviceNamesProperty('LED');
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
@@ -31,7 +31,7 @@ classdef LedPulse < symphonyui.core.Protocol
         end
         
         function prepareRun(obj)
-            prepareRun@symphonyui.core.Protocol(obj);
+            prepareRun@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
@@ -56,14 +56,14 @@ classdef LedPulse < symphonyui.core.Protocol
         end
         
         function prepareEpoch(obj, epoch)
-            prepareEpoch@symphonyui.core.Protocol(obj, epoch);
+            prepareEpoch@edu.washington.rieke.protocols.RiekeProtocol(obj, epoch);
             
             epoch.addStimulus(obj.rig.getDevice(obj.led), obj.createLedStimulus());
             epoch.addResponse(obj.rig.getDevice(obj.amp));
         end
         
         function prepareInterval(obj, interval)
-            prepareInterval@symphonyui.core.Protocol(obj, interval);
+            prepareInterval@edu.washington.rieke.protocols.RiekeProtocol(obj, interval);
             
             device = obj.rig.getDevice(obj.led);
             interval.addDirectCurrentStimulus(device, device.background, obj.interpulseInterval, obj.sampleRate);
