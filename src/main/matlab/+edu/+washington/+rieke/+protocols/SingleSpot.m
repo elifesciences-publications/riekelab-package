@@ -38,6 +38,7 @@ classdef SingleSpot < edu.washington.rieke.protocols.RiekeStageProtocol
             prepareRun@edu.washington.rieke.protocols.RiekeStageProtocol(obj);
             
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+            obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp));
             obj.showFigure('io.github.stage_vss.figures.FrameTimingFigure', obj.rig.getDevice('Stage'));
         end
         

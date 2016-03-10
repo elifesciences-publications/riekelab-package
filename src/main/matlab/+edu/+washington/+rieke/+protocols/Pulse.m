@@ -17,7 +17,7 @@ classdef Pulse < edu.washington.rieke.protocols.RiekeProtocol
     methods
         
         function didSetRig(obj)
-            didSetRig@symphonyui.core.Protocol(obj);
+            didSetRig@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
@@ -27,7 +27,7 @@ classdef Pulse < edu.washington.rieke.protocols.RiekeProtocol
         end
         
         function prepareRun(obj)
-            prepareRun@symphonyui.core.Protocol(obj);
+            prepareRun@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp));
@@ -51,14 +51,14 @@ classdef Pulse < edu.washington.rieke.protocols.RiekeProtocol
         end
         
         function prepareEpoch(obj, epoch)
-            prepareEpoch@symphonyui.core.Protocol(obj, epoch);
+            prepareEpoch@edu.washington.rieke.protocols.RiekeProtocol(obj, epoch);
             
             epoch.addStimulus(obj.rig.getDevice(obj.amp), obj.createAmpStimulus());
             epoch.addResponse(obj.rig.getDevice(obj.amp));
         end
         
         function prepareInterval(obj, interval)
-            prepareInterval@symphonyui.core.Protocol(obj, interval);
+            prepareInterval@edu.washington.rieke.protocols.RiekeProtocol(obj, interval);
             
             device = obj.rig.getDevice(obj.amp);
             interval.addDirectCurrentStimulus(device, device.background, obj.interpulseInterval, obj.sampleRate);
