@@ -6,9 +6,9 @@ classdef SingleSpot < edu.washington.rieke.protocols.RiekeStageProtocol
         stimTime = 1000                 % Spot duration (ms)
         tailTime = 500                  % Spot trailing duration (ms)
         spotIntensity = 1.0             % Spot light intensity (0-1)
-        spotDiameter = 300              % Spot diameter size (pixels)
+        spotDiameter = 300              % Spot diameter size (um)
         backgroundIntensity = 0.5       % Background light intensity (0-1)
-        centerOffset = [0, 0]           % Spot [x, y] center offset (pixels)
+        centerOffset = [0, 0]           % Spot [x, y] center offset (um)
         numberOfAverages = uint16(5)    % Number of epochs
         interpulseInterval = 0          % Duration between spots (s)
     end
@@ -45,14 +45,17 @@ classdef SingleSpot < edu.washington.rieke.protocols.RiekeStageProtocol
         function p = createPresentation(obj)
             canvasSize = obj.rig.getDevice('Stage').getCanvasSize();
             
+            spotDiameterPix = obj.um2pix(obj.spotDiameter);
+            centerOffsetPix = obj.um2pix(obj.centerOffset);
+            
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * 1e-3);
             p.setBackgroundColor(obj.backgroundIntensity);
             
             spot = stage.builtin.stimuli.Ellipse();
             spot.color = obj.spotIntensity;
-            spot.radiusX = obj.spotDiameter/2;
-            spot.radiusY = obj.spotDiameter/2;
-            spot.position = canvasSize/2 + obj.centerOffset;
+            spot.radiusX = spotDiameterPix/2;
+            spot.radiusY = spotDiameterPix/2;
+            spot.position = canvasSize/2 + centerOffsetPix;
             p.addStimulus(spot);
             
             spotVisible = stage.builtin.controllers.PropertyController(spot, 'visible', ...
