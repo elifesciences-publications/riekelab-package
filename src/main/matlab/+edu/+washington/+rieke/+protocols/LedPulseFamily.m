@@ -9,7 +9,7 @@ classdef LedPulseFamily < edu.washington.rieke.protocols.RiekeProtocol
         pulsesInFamily = uint16(3)      % Number of pulses in family
         lightMean = 0                   % Pulse and LED background mean (V)
         amp                             % Input amplifier
-        numberOfAverages = uint16(5)    % Number of epochs
+        numberOfAverages = uint16(5)    % Number of families
         interpulseInterval = 0          % Duration between pulses (s)
     end
     

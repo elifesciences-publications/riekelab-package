@@ -7,15 +7,15 @@ classdef LedNoiseFamily < edu.washington.rieke.protocols.RiekeProtocol
         tailTime = 100                  % Noise trailing duration (ms)
         frequencyCutoff = 60            % Noise frequency cutoff for smoothing (Hz)
         numberOfFilters = 4             % Number of filters in cascade for noise smoothing
-        startStdv = 0.005               % Noise standard deviation, post-smoothing (Hz)
-        stdvMultiplier = 3
-        stdvMultiples = uint16(3)
-        repeatsPerStdv = uint16(5)
-        useRandomSeed = false
-        lightMean = 0.1
-        amp
-        numberOfAverages = uint16(5)
-        interpulseInterval = 0
+        startStdv = 0.005               % First noise standard deviation, post-smoothing (Hz)
+        stdvMultiplier = 3              % Amount to multiply the starting standard deviation by with each new multiple 
+        stdvMultiples = uint16(3)       % Number of standard deviation multiples in family
+        repeatsPerStdv = uint16(5)      % Number of times to repeat each standard deviation multiple
+        useRandomSeed = false           % Use a random seed for each standard deviation multiple?
+        lightMean = 0.1                 % Noise and LED background mean (V)
+        amp                             % Input amplifier
+        numberOfAverages = uint16(5)    % Number of families
+        interpulseInterval = 0          % Duration between noise stimuli (s)
     end
     
     properties (Hidden, Dependent)
@@ -50,7 +50,6 @@ classdef LedNoiseFamily < edu.washington.rieke.protocols.RiekeProtocol
                     elseif mod(i - 1, obj.repeatsPerStdv) == 0
                         seed = RandStream.shuffleSeed;
                     end
-                    
                     s{i} = obj.createLedStimulus(i, seed);
                 end
             end
@@ -60,6 +59,7 @@ classdef LedNoiseFamily < edu.washington.rieke.protocols.RiekeProtocol
             prepareRun@edu.washington.rieke.protocols.RiekeProtocol(obj);
             
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+            obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp));
             obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
                 'baselineRegion', [0 obj.preTime], ...
                 'measurementRegion', [obj.preTime obj.preTime+obj.stimTime]);
