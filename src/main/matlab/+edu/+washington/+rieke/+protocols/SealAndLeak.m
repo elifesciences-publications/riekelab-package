@@ -61,7 +61,7 @@ classdef SealAndLeak < edu.washington.rieke.protocols.RiekeProtocol
                     'HorizontalAlignment', 'center', ...
                     'String', '');
                 uix.Empty('Parent', layout);
-                set(layout, 'Height', [-1 85 -1]);
+                set(layout, 'Height', [-1 42 -1]);
             end
             
             if isvalid(obj.modeFigure)
