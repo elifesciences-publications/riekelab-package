@@ -7,7 +7,11 @@ classdef MicrodisplayDevice < symphonyui.core.Device
     
     methods
         
-        function obj = MicrodisplayDevice(gammaRamps)            
+        function obj = MicrodisplayDevice(gammaRamps, comPort)
+            if nargin < 2
+                comPort = 'COM4';
+            end
+            
             host = 'localhost';
             port = 5678;
             
@@ -22,7 +26,7 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             obj.stageClient.connect(host, port);
             obj.stageClient.setMonitorGammaRamp(ramp, ramp, ramp);
             
-            obj.microdisplay = Microdisplay();
+            obj.microdisplay = Microdisplay(comPort);
             obj.microdisplay.connect();
             obj.microdisplay.setBrightness(uint8(brightness));
             
@@ -64,6 +68,13 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             end
             
             canvasSize = obj.getCanvasSize();
+            
+            background = stage.builtin.stimuli.Rectangle();
+            background.size = canvasSize;
+            background.position = canvasSize/2;
+            background.color = presentation.backgroundColor;
+            presentation.setBackgroundColor(0);
+            presentation.insertStimulus(1, background);
             
             tracker = stage.builtin.stimuli.FrameTracker();
             tracker.size = canvasSize;
