@@ -9,6 +9,11 @@ classdef (Abstract) RiekeStageProtocol < edu.washington.rieke.protocols.RiekePro
         function prepareEpoch(obj, epoch)
             prepareEpoch@edu.washington.rieke.protocols.RiekeProtocol(obj, epoch);
             epoch.shouldWaitForTrigger = true;
+            
+            frameMonitor = obj.rig.getDevices('Frame Monitor');
+            if ~isempty(frameMonitor)
+                epoch.addResponse(frameMonitor{1});
+            end
         end
         
         function controllerDidStartHardware(obj)

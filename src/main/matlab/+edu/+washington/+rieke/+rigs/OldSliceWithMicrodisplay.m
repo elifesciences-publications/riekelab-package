@@ -3,6 +3,8 @@ classdef OldSliceWithMicrodisplay < edu.washington.rieke.rigs.OldSlice
     methods
         
         function obj = OldSliceWithMicrodisplay()
+            import symphonyui.builtin.devices.*;
+            
             ramps = containers.Map();
             ramps('minimum') = linspace(0, 65535, 256);
             ramps('low')     = obj.MICRODISPLAY_LOW_GAMMA_RAMP * 65535;
@@ -12,6 +14,9 @@ classdef OldSliceWithMicrodisplay < edu.washington.rieke.rigs.OldSlice
             microdisplay = edu.washington.rieke.devices.MicrodisplayDevice(ramps);
             microdisplay.addConfigurationSetting('micronsPerPixel', 1.2, 'isReadOnly', true);
             obj.addDevice(microdisplay);
+            
+            frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(obj.daqController.getStream('ANALOG_IN.7'));
+            obj.addDevice(frameMonitor);
         end
         
     end
