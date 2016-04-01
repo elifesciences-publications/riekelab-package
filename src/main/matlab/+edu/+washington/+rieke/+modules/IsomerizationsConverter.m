@@ -22,7 +22,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             
             set(figureHandle, ...
                 'Name', 'Isomerizations Converter', ...
-                'Position', screenCenter(270, 295));
+                'Position', screenCenter(270, 304));
             
             mainLayout = uix.VBox( ...
                 'Parent', figureHandle);
@@ -156,7 +156,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             set(voltsLayout, 'Heights', [23 23]);
             set(converterLayout, 'Widths', [-1 23 -1]);
             
-            set(mainLayout, 'Heights', [122 92 92]);
+            set(mainLayout, 'Heights', [125 95 95]);
         end
         
     end
