@@ -5,6 +5,7 @@ classdef Control < edu.washington.riekelab.epochgroups.EpochGroup
         function obj = Control()
             import symphonyui.core.*;
             
+            obj.addAllowableParentType([]);
         end
         
     end

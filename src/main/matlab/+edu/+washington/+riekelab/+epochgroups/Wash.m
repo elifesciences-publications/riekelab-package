@@ -5,6 +5,7 @@ classdef Wash < edu.washington.riekelab.epochgroups.EpochGroup
         function obj = Wash()
             import symphonyui.core.*;
             
+            obj.addAllowableParentType([]);
         end
         
     end
