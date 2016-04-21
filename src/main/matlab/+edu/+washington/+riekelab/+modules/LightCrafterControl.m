@@ -4,6 +4,7 @@ classdef LightCrafterControl < symphonyui.ui.Module
         lightCrafter
         ledEnablesCheckboxes
         patternRatePopupMenu
+        prerenderCheckbox
     end
     
     methods
@@ -13,7 +14,7 @@ classdef LightCrafterControl < symphonyui.ui.Module
             
             set(figureHandle, ...
                 'Name', 'LightCrafter Control', ...
-                'Position', screenCenter(320, 75));
+                'Position', screenCenter(320, 105));
             
             mainLayout = uix.HBox( ...
                 'Parent', figureHandle, ...
@@ -29,6 +30,9 @@ classdef LightCrafterControl < symphonyui.ui.Module
             Label( ...
                 'Parent', lightCrafterLayout, ...
                 'String', 'Pattern rate:');
+            Label( ...
+                'Parent', lightCrafterLayout, ...
+                'String', 'Prerender:');
             ledEnablesLayout = uix.HBox( ...
                 'Parent', lightCrafterLayout, ...
                 'Spacing', 3);
@@ -60,10 +64,15 @@ classdef LightCrafterControl < symphonyui.ui.Module
                 'String', {' '}, ...
                 'HorizontalAlignment', 'left', ...
                 'Callback', @obj.onSelectedPatternRate);
+            obj.prerenderCheckbox = uicontrol( ...
+                'Parent', lightCrafterLayout, ...
+                'Style', 'checkbox', ...
+                'String', '', ...
+                'Callback', @obj.onSelectedPrerender);
             
             set(lightCrafterLayout, ...
                 'Widths', [70 -1], ...
-                'Heights', [23 23]);
+                'Heights', [23 23 23]);
         end
         
     end
@@ -80,6 +89,7 @@ classdef LightCrafterControl < symphonyui.ui.Module
             
             obj.populateLedEnablesCheckboxes();
             obj.populatePatternRateList();
+            obj.populatePrerenderCheckbox();
         end
         
     end
@@ -115,6 +125,15 @@ classdef LightCrafterControl < symphonyui.ui.Module
         function onSelectedPatternRate(obj, ~, ~)
             rate = get(obj.patternRatePopupMenu, 'Value');
             obj.lightCrafter.setPatternRate(rate);
+        end
+        
+        function populatePrerenderCheckbox(obj)
+            set(obj.prerenderCheckbox, 'Value', obj.lightCrafter.prerender);
+        end
+        
+        function onSelectedPrerender(obj, ~, ~)
+            prerender = get(obj.prerenderCheckbox, 'Value');
+            obj.lightCrafter.setPrerender(prerender);
         end
         
     end

@@ -1,5 +1,9 @@
 classdef LightCrafterDevice < symphonyui.core.Device
     
+    properties (SetAccess = private)
+        prerender
+    end
+    
     properties (Access = private, Transient)
         stageClient
         lightCrafter
@@ -15,6 +19,8 @@ classdef LightCrafterDevice < symphonyui.core.Device
             cobj = Symphony.Core.UnitConvertingExternalDevice(['LightCrafter.Stage@' host], 'Unspecified', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
             obj@symphonyui.core.Device(cobj);
             obj.cobj.MeasurementConversionTarget = symphonyui.core.Measurement.UNITLESS;
+            
+            obj.prerender = false;
             
             obj.stageClient = stage.core.network.StageClient();
             obj.stageClient.connect(host, port);
@@ -48,6 +54,7 @@ classdef LightCrafterDevice < symphonyui.core.Device
             renderer = stage.builtin.renderers.PatternRenderer(attributes{3}, attributes{1});
             obj.stageClient.setCanvasRenderer(renderer);
             
+            obj.addConfigurationSetting('prerender', obj.prerender, 'isReadOnly', true);
             obj.addConfigurationSetting('canvasSize', canvasSize, 'isReadOnly', true);
             obj.addConfigurationSetting('trueCanvasSize', trueCanvasSize, 'isReadOnly', true);
             obj.addConfigurationSetting('monitorRefreshRate', refreshRate, 'isReadOnly', true);
@@ -68,6 +75,11 @@ classdef LightCrafterDevice < symphonyui.core.Device
             end
         end
         
+        function setPrerender(obj, tf)
+            obj.prerender = logical(tf);
+            obj.setReadOnlyConfigurationSetting('prerender', logical(tf));
+        end
+        
         function s = getCanvasSize(obj)
             s = obj.getConfigurationSetting('canvasSize');
         end
@@ -82,7 +94,7 @@ classdef LightCrafterDevice < symphonyui.core.Device
         
         function play(obj, presentation, prerender)
             if nargin < 3
-                prerender = false;
+                prerender = obj.prerender;
             end
             
             canvasSize = obj.getCanvasSize();
@@ -94,12 +106,12 @@ classdef LightCrafterDevice < symphonyui.core.Device
             presentation.setBackgroundColor(0);
             presentation.insertStimulus(1, background);
             
-            tracker = stage.builtin.stimuli.FrameTracker();
+            tracker = stage.builtin.stimuli.Rectangle();
             tracker.size = [canvasSize(1) * 1/8, canvasSize(2)];
             tracker.position = [canvasSize(1) - (canvasSize(1)/16), canvasSize(2)/2];
             presentation.addStimulus(tracker);
             
-            trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)double(s.time + (1/s.frameRate) < presentation.duration));
+            trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)mod(s.frame, 2) && double(s.time + (1/s.frameRate) < presentation.duration));
             presentation.addController(trackerColor);            
             
             if prerender
