@@ -99,8 +99,8 @@ classdef LightCrafterDevice < symphonyui.core.Device
             tracker.position = [canvasSize(1) - (canvasSize(1)/16), canvasSize(2)/2];
             presentation.addStimulus(tracker);
             
-            trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)double(s.time + (1/s.patternRate) < presentation.duration));
-            presentation.addController(trackerColor);
+            trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)double(s.time + (1/s.frameRate) < presentation.duration));
+            presentation.addController(trackerColor);            
             
             if prerender
                 player = stage.builtin.players.PrerenderedPlayer(presentation);
