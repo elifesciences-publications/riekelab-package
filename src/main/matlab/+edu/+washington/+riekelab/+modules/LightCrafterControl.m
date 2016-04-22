@@ -128,7 +128,7 @@ classdef LightCrafterControl < symphonyui.ui.Module
         end
         
         function populatePrerenderCheckbox(obj)
-            set(obj.prerenderCheckbox, 'Value', obj.lightCrafter.prerender);
+            set(obj.prerenderCheckbox, 'Value', obj.lightCrafter.getPrerender());
         end
         
         function onSelectedPrerender(obj, ~, ~)

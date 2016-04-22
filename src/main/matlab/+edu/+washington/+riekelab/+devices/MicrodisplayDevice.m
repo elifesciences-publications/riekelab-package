@@ -36,6 +36,7 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             obj.addConfigurationSetting('canvasSize', canvasSize, 'isReadOnly', true);
             obj.addConfigurationSetting('trueCanvasSize', trueCanvasSize, 'isReadOnly', true);
             obj.addConfigurationSetting('monitorRefreshRate', obj.stageClient.getMonitorRefreshRate(), 'isReadOnly', true);
+            obj.addConfigurationSetting('prerender', false, 'isReadOnly', true);
             obj.addConfigurationSetting('microdisplayBrightness', char(brightness), 'isReadOnly', true);
             obj.addConfigurationSetting('microdisplayBrightnessValue', uint8(brightness), 'isReadOnly', true);
             obj.addResource('gammaRamps', gammaRamps);
@@ -62,11 +63,15 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             r = obj.getConfigurationSetting('monitorRefreshRate');
         end
         
-        function play(obj, presentation, prerender)
-            if nargin < 3
-                prerender = false;
-            end
-            
+        function setPrerender(obj, tf)
+            obj.setReadOnlyConfigurationSetting('prerender', logical(tf));
+        end
+        
+        function tf = getPrerender(obj)
+            tf = obj.getConfigurationSetting('prerender');
+        end
+        
+        function play(obj, presentation)
             canvasSize = obj.getCanvasSize();
             
             background = stage.builtin.stimuli.Rectangle();
@@ -84,7 +89,7 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)double(s.time + (1/s.frameRate) < presentation.duration));
             presentation.addController(trackerColor);
             
-            if prerender
+            if obj.getPrerender()
                 player = stage.builtin.players.PrerenderedPlayer(presentation);
             else
                 player = stage.builtin.players.RealtimePlayer(presentation);
