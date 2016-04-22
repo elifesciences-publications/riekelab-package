@@ -13,6 +13,12 @@ classdef OldSliceWithMicrodisplay < edu.washington.riekelab.rigs.OldSlice
             ramps('maximum') = linspace(0, 65535, 256);
             microdisplay = edu.washington.riekelab.devices.MicrodisplayDevice(ramps);
             microdisplay.addConfigurationSetting('micronsPerPixel', 1.2, 'isReadOnly', true);
+            
+            % Binding the microdisplay to an unused stream only so its configuration settings are written to each epoch.
+            daq = obj.daqController;
+            microdisplay.bindStream(daq.getStream('DIGITAL_OUT.1'));
+            daq.getStream('DIGITAL_OUT.1').setBitPosition(microdisplay, 15);
+            
             obj.addDevice(microdisplay);
             
             frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(obj.daqController.getStream('ANALOG_IN.7'));

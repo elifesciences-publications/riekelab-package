@@ -13,6 +13,12 @@ classdef ConfocalWithMicrodisplay < edu.washington.riekelab.rigs.Confocal
             ramps('maximum') = linspace(0, 65535, 256);
             microdisplay = edu.washington.riekelab.devices.MicrodisplayDevice(ramps, 'COM3');
             microdisplay.addConfigurationSetting('micronsPerPixel', 1.2, 'isReadOnly', true);
+            
+            % Binding the microdisplay to an unused stream only so its configuration settings are written to each epoch.
+            daq = obj.daqController;
+            microdisplay.bindStream(daq.getStream('DIGITAL_OUT.1'));
+            daq.getStream('DIGITAL_OUT.1').setBitPosition(microdisplay, 15);
+            
             obj.addDevice(microdisplay);
             
             frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(obj.daqController.getStream('ANALOG_IN.7'));
@@ -23,7 +29,7 @@ classdef ConfocalWithMicrodisplay < edu.washington.riekelab.rigs.Confocal
     
     properties (Constant)
         % This is a useful command to go from ramp array to this...
-        % strjoin(arrayfun(@(x) num2str(x),ramp,'UniformOutput',false),';\n')
+        % strjoin(arrayfun(@(x)num2str(x), ramp, 'UniformOutput', false),';\n')
         
         MICRODISPLAY_LOW_GAMMA_RAMP = [ ...
             0.18824;

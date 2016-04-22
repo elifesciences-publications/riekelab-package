@@ -12,7 +12,7 @@ classdef LightCrafterDevice < symphonyui.core.Device
             host = 'localhost';
             port = 5678;
             
-            cobj = Symphony.Core.UnitConvertingExternalDevice(['LightCrafter.Stage@' host], 'Unspecified', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
+            cobj = Symphony.Core.UnitConvertingExternalDevice(['LightCrafter Stage@' host], 'Texas Instruments', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
             obj@symphonyui.core.Device(cobj);
             obj.cobj.MeasurementConversionTarget = symphonyui.core.Measurement.UNITLESS;
             
