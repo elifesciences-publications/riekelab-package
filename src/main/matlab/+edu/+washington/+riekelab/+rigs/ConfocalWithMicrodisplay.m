@@ -11,8 +11,7 @@ classdef ConfocalWithMicrodisplay < edu.washington.riekelab.rigs.Confocal
             ramps('medium')  = obj.MICRODISPLAY_MEDIUM_GAMMA_RAMP * 65535;
             ramps('high')    = obj.MICRODISPLAY_HIGH_GAMMA_RAMP * 65535;
             ramps('maximum') = linspace(0, 65535, 256);
-            microdisplay = edu.washington.riekelab.devices.MicrodisplayDevice(ramps, 'COM3');
-            microdisplay.addConfigurationSetting('micronsPerPixel', 1.2, 'isReadOnly', true);
+            microdisplay = edu.washington.riekelab.devices.MicrodisplayDevice('gammaRamps', ramps, 'micronsPerPixel', 1.2, 'comPort', 'COM3');
             
             % Binding the microdisplay to an unused stream only so its configuration settings are written to each epoch.
             daq = obj.daqController;
@@ -21,7 +20,7 @@ classdef ConfocalWithMicrodisplay < edu.washington.riekelab.rigs.Confocal
             
             obj.addDevice(microdisplay);
             
-            frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(obj.daqController.getStream('ANALOG_IN.7'));
+            frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(daq.getStream('ANALOG_IN.7'));
             obj.addDevice(frameMonitor);
         end
         

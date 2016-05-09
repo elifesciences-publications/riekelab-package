@@ -7,26 +7,30 @@ classdef MicrodisplayDevice < symphonyui.core.Device
     
     methods
         
-        function obj = MicrodisplayDevice(gammaRamps, comPort)
-            if nargin < 2
-                comPort = 'COM4';
-            end
+        function obj = MicrodisplayDevice(varargin)
+            ip = inputParser();
+            ip.addParameter('host', 'localhost', @ischar);
+            ip.addParameter('port', 5678, @isnumeric);
+            ip.addParameter('comPort', 'COM4', @ischar);
+            ip.addParameter('gammaRamps', containers.Map( ...
+                {'minimum', 'low', 'medium', 'high', 'maximum'}, ...
+                {linspace(0, 65535, 256), linspace(0, 65535, 256), linspace(0, 65535, 256), linspace(0, 65535, 256), linspace(0, 65535, 256)}), ...
+                @(r)isa(r, 'containers.Map'));
+            ip.addParameter('micronsPerPixel', 1, @isnumeric);
+            ip.parse(varargin{:});
             
-            host = 'localhost';
-            port = 5678;
-            
-            cobj = Symphony.Core.UnitConvertingExternalDevice(['Microdisplay Stage@' host], 'eMagin', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
+            cobj = Symphony.Core.UnitConvertingExternalDevice(['Microdisplay Stage@' ip.Results.host], 'eMagin', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
             obj@symphonyui.core.Device(cobj);
             obj.cobj.MeasurementConversionTarget = symphonyui.core.Measurement.UNITLESS;
             
             brightness = edu.washington.riekelab.devices.MicrodisplayBrightness.MINIMUM;
-            ramp = gammaRamps(char(brightness));
+            ramp = ip.Results.gammaRamps(char(brightness));
             
             obj.stageClient = stage.core.network.StageClient();
-            obj.stageClient.connect(host, port);
+            obj.stageClient.connect(ip.Results.host, ip.Results.port);
             obj.stageClient.setMonitorGammaRamp(ramp, ramp, ramp);
             
-            obj.microdisplay = Microdisplay(comPort);
+            obj.microdisplay = Microdisplay(ip.Results.comPort);
             obj.microdisplay.connect();
             obj.microdisplay.setBrightness(uint8(brightness));
             
@@ -39,7 +43,8 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             obj.addConfigurationSetting('prerender', false, 'isReadOnly', true);
             obj.addConfigurationSetting('microdisplayBrightness', char(brightness), 'isReadOnly', true);
             obj.addConfigurationSetting('microdisplayBrightnessValue', uint8(brightness), 'isReadOnly', true);
-            obj.addResource('gammaRamps', gammaRamps);
+            obj.addConfigurationSetting('micronsPerPixel', ip.Results.micronsPerPixel, 'isReadOnly', true);
+            obj.addResource('gammaRamps', ip.Results.gammaRamps);
         end
         
         function close(obj)
@@ -128,6 +133,11 @@ classdef MicrodisplayDevice < symphonyui.core.Device
         function b = getBrightness(obj)
             value = obj.microdisplay.getBrightness();
             b = edu.washington.riekelab.devices.MicrodisplayBrightness(value);
+        end
+        
+        function p = um2pix(obj, um)
+            micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
+            p = round(um / micronsPerPixel);
         end
         
     end

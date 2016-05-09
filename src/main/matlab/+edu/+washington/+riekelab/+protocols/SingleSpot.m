@@ -43,10 +43,11 @@ classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
         end
         
         function p = createPresentation(obj)
-            canvasSize = obj.rig.getDevice('Stage').getCanvasSize();
+            device = obj.rig.getDevice('Stage');
+            canvasSize = device.getCanvasSize();
             
-            spotDiameterPix = obj.um2pix(obj.spotDiameter);
-            centerOffsetPix = obj.um2pix(obj.centerOffset);
+            spotDiameterPix = device.um2pix(obj.spotDiameter);
+            centerOffsetPix = device.um2pix(obj.centerOffset);
             
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * 1e-3);
             p.setBackgroundColor(obj.backgroundIntensity);

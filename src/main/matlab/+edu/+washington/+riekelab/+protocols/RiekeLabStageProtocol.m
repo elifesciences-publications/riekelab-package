@@ -44,19 +44,5 @@ classdef (Abstract) RiekeLabStageProtocol < edu.washington.riekelab.protocols.Ri
         
     end
     
-    methods (Access = protected)
-        
-        function p = um2pix(obj, um)
-            stages = obj.rig.getDevices('Stage');
-            if isempty(stages)
-                micronsPerPixel = 1;
-            else
-                micronsPerPixel = stages{1}.getConfigurationSetting('micronsPerPixel');
-            end
-            p = round(um / micronsPerPixel);
-        end
-        
-    end
-    
 end
 

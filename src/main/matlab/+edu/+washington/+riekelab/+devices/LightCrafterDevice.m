@@ -8,16 +8,19 @@ classdef LightCrafterDevice < symphonyui.core.Device
     
     methods
         
-        function obj = LightCrafterDevice()
-            host = 'localhost';
-            port = 5678;
+        function obj = LightCrafterDevice(varargin)
+            ip = inputParser();
+            ip.addParameter('host', 'localhost', @ischar);
+            ip.addParameter('port', 5678, @isnumeric);
+            ip.addParameter('micronsPerPixel', @isnumeric);
+            ip.parse(varargin{:});
             
-            cobj = Symphony.Core.UnitConvertingExternalDevice(['LightCrafter Stage@' host], 'Texas Instruments', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
+            cobj = Symphony.Core.UnitConvertingExternalDevice(['LightCrafter Stage@' ip.Results.host], 'Texas Instruments', Symphony.Core.Measurement(0, symphonyui.core.Measurement.UNITLESS));
             obj@symphonyui.core.Device(cobj);
             obj.cobj.MeasurementConversionTarget = symphonyui.core.Measurement.UNITLESS;
             
             obj.stageClient = stage.core.network.StageClient();
-            obj.stageClient.connect(host, port);
+            obj.stageClient.connect(ip.Results.host, ip.Results.port);
             obj.stageClient.setMonitorGamma(1);
             
             trueCanvasSize = obj.stageClient.getCanvasSize();
@@ -54,6 +57,7 @@ classdef LightCrafterDevice < symphonyui.core.Device
             obj.addConfigurationSetting('prerender', false, 'isReadOnly', true);
             obj.addConfigurationSetting('lightCrafterLedEnables',  [auto, red, green, blue], 'isReadOnly', true);
             obj.addConfigurationSetting('lightCrafterPatternRate', obj.lightCrafter.currentPatternRate(), 'isReadOnly', true);
+            obj.addConfigurationSetting('micronsPerPixel', ip.Results.micronsPerPixel, 'isReadOnly', true);
         end
         
         function close(obj)
@@ -156,6 +160,11 @@ classdef LightCrafterDevice < symphonyui.core.Device
         
         function r = getPatternRate(obj)
             r = obj.lightCrafter.currentPatternRate();
+        end
+        
+        function p = um2pix(obj, um)
+            micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
+            p = round(um / micronsPerPixel);
         end
         
     end
