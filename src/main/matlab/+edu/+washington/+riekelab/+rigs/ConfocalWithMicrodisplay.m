@@ -26,3 +26,4 @@ classdef ConfocalWithMicrodisplay < edu.washington.riekelab.rigs.Confocal
     end
     
 end
+

@@ -54,3 +54,4 @@ classdef Suction < symphonyui.core.descriptions.RigDescription
     end
     
 end
+

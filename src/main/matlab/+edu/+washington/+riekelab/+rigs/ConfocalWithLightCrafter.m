@@ -17,3 +17,4 @@ classdef ConfocalWithLightCrafter < edu.washington.riekelab.rigs.Confocal
     end
     
 end
+

@@ -58,3 +58,4 @@ classdef OldSlice < symphonyui.core.descriptions.RigDescription
     end
     
 end
+

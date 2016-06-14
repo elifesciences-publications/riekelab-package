@@ -17,3 +17,4 @@ classdef OldSliceWithLightCrafter < edu.washington.riekelab.rigs.OldSlice
     end
     
 end
+

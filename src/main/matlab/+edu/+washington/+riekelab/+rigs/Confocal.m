@@ -58,3 +58,4 @@ classdef Confocal < symphonyui.core.descriptions.RigDescription
     end
     
 end
+
