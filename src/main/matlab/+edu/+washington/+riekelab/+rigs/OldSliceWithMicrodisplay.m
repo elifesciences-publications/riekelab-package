@@ -5,6 +5,8 @@ classdef OldSliceWithMicrodisplay < edu.washington.riekelab.rigs.OldSlice
         function obj = OldSliceWithMicrodisplay()
             import symphonyui.builtin.devices.*;
             
+            daq = obj.daqController;
+            
             ramps = containers.Map();
             ramps('minimum') = linspace(0, 65535, 256);
             ramps('low')     = obj.MICRODISPLAY_LOW_GAMMA_RAMP * 65535;
@@ -12,12 +14,8 @@ classdef OldSliceWithMicrodisplay < edu.washington.riekelab.rigs.OldSlice
             ramps('high')    = obj.MICRODISPLAY_HIGH_GAMMA_RAMP * 65535;
             ramps('maximum') = linspace(0, 65535, 256);
             microdisplay = edu.washington.riekelab.devices.MicrodisplayDevice('gammaRamps', ramps, 'micronsPerPixel', 1.2, 'comPort', 'COM3');
-            
-            % Binding the microdisplay to an unused stream only so its configuration settings are written to each epoch.
-            daq = obj.daqController;
             microdisplay.bindStream(daq.getStream('DIGITAL_OUT.1'));
             daq.getStream('DIGITAL_OUT.1').setBitPosition(microdisplay, 15);
-            
             obj.addDevice(microdisplay);
             
             frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(daq.getStream('ANALOG_IN.7'));
