@@ -14,6 +14,13 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         useRandomSeed = false           % Use a random seed for each standard deviation multiple?
         lightMean = 0.1                 % Noise and LED background mean (V)
         amp                             % Input amplifier
+    end
+    
+    properties (Dependent, SetAccess = private)
+        amp2                            % Secondary amplifier
+    end
+    
+    properties 
         numberOfAverages = uint16(5)    % Number of families
         interpulseInterval = 0          % Duration between noise stimuli (s)
     end
@@ -40,6 +47,14 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
+        function d = getPropertyDescriptor(obj, name)
+            d = getPropertyDescriptor@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, name);
+            
+            if strncmp(name, 'amp2', 4) && numel(obj.rig.getDeviceNames('Amp')) < 2
+                d.isHidden = true;
+            end
+        end
+        
         function p = getPreview(obj, panel)
             p = symphonyui.builtin.previews.StimuliPreview(panel, @()createPreviewStimuli(obj));
             function s = createPreviewStimuli(obj)
@@ -58,11 +73,24 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         function prepareRun(obj)
             prepareRun@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
             
-            obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
-            obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp));
-            obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
-                'baselineRegion', [0 obj.preTime], ...
-                'measurementRegion', [obj.preTime obj.preTime+obj.stimTime]);
+            if numel(obj.rig.getDeviceNames('Amp')) < 2
+                obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+                obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp), ...
+                    'groupBy', {'stdv'});
+                obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
+                    'baselineRegion', [0 obj.preTime], ...
+                    'measurementRegion', [obj.preTime obj.preTime+obj.stimTime]);
+            else
+                obj.showFigure('edu.washington.riekelab.figures.DualResponseFigure', obj.rig.getDevice(obj.amp), obj.rig.getDevice(obj.amp2));
+                obj.showFigure('edu.washington.riekelab.figures.DualMeanResponseFigure', obj.rig.getDevice(obj.amp), obj.rig.getDevice(obj.amp2), ...
+                    'groupBy1', {'stdv'}, ...
+                    'groupBy2', {'stdv'});
+                obj.showFigure('edu.washington.riekelab.figures.DualResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, obj.rig.getDevice(obj.amp2), {@mean, @var}, ...
+                    'baselineRegion1', [0 obj.preTime], ...
+                    'measurementRegion1', [obj.preTime obj.preTime+obj.stimTime], ...
+                    'baselineRegion2', [0 obj.preTime], ...
+                    'measurementRegion2', [obj.preTime obj.preTime+obj.stimTime]);
+            end
             
             obj.rig.getDevice(obj.led).background = symphonyui.core.Measurement(obj.lightMean, 'V');
         end
@@ -106,6 +134,10 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             epoch.addParameter('seed', seed);
             epoch.addStimulus(obj.rig.getDevice(obj.led), stim);
             epoch.addResponse(obj.rig.getDevice(obj.amp));
+            
+            if numel(obj.rig.getDeviceNames('Amp')) >= 2
+                epoch.addResponse(obj.rig.getDevice(obj.amp2));
+            end
         end
         
         function prepareInterval(obj, interval)
@@ -121,6 +153,16 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         
         function tf = shouldContinueRun(obj)
             tf = obj.numEpochsCompleted < obj.numberOfAverages * obj.pulsesInFamily;
+        end
+        
+        function a = get.amp2(obj)
+            amps = obj.rig.getDeviceNames('Amp');
+            if numel(amps) < 2
+                a = '(None)';
+            else
+                i = find(~ismember(amps, obj.amp), 1);
+                a = amps{i};
+            end
         end
         
     end

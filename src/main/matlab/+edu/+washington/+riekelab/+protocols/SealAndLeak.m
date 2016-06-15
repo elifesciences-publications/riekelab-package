@@ -8,11 +8,15 @@ classdef SealAndLeak < edu.washington.riekelab.protocols.RiekeLabProtocol
         stimTime = 30                   % Pulse duration (ms)
         tailTime = 15                   % Pulse trailing duration (ms)
         pulseAmplitude = 5              % Pulse amplitude (mV or pA)
-        leakAmpHoldSignal = -60         % Amplifier hold signal to use while in leak mode
+        leakAmpHoldSignal = -60         % Amplifier hold signal to use while in leak mode (mV or pA)
     end
     
     properties (Hidden, Dependent)
         ampHoldSignal
+    end
+    
+    properties (Dependent, SetAccess = private)
+        amp2                            % Secondary amplifier
     end
     
     properties (Hidden)
@@ -35,6 +39,14 @@ classdef SealAndLeak < edu.washington.riekelab.protocols.RiekeLabProtocol
             didSetRig@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
             
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
+        end
+        
+        function d = getPropertyDescriptor(obj, name)
+            d = getPropertyDescriptor@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, name);
+            
+            if strncmp(name, 'amp2', 4) && numel(obj.rig.getDeviceNames('Amp')) < 2
+                d.isHidden = true;
+            end
         end
         
         function p = getPreview(obj, panel)
@@ -139,6 +151,16 @@ classdef SealAndLeak < edu.washington.riekelab.protocols.RiekeLabProtocol
             
             if isvalid(obj.modeFigure)
                 set(obj.modeFigure.userData.text, 'String', [obj.mode ' next']);
+            end
+        end
+        
+        function a = get.amp2(obj)
+            amps = obj.rig.getDeviceNames('Amp');
+            if numel(amps) < 2
+                a = '(None)';
+            else
+                i = find(~ismember(amps, obj.amp), 1);
+                a = amps{i};
             end
         end
         
