@@ -6,6 +6,13 @@ classdef Ramp < edu.washington.riekelab.protocols.RiekeLabProtocol
         stimTime = 500                  % Ramp duration (ms)
         tailTime = 50                   % Ramp trailing duration (ms)
         rampAmplitude = 100             % Ramp amplitude (mV or pA)
+    end
+    
+    properties (Dependent, SetAccess = private)
+        amp2                            % Secondary amplifier
+    end
+    
+    properties
         numberOfAverages = uint16(5)    % Number of epochs
         interpulseInterval = 0          % Duration between ramps (s)
     end
@@ -22,6 +29,14 @@ classdef Ramp < edu.washington.riekelab.protocols.RiekeLabProtocol
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
+        function d = getPropertyDescriptor(obj, name)
+            d = getPropertyDescriptor@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, name);
+            
+            if strncmp(name, 'amp2', 4) && numel(obj.rig.getDeviceNames('Amp')) < 2
+                d.isHidden = true;
+            end
+        end
+        
         function p = getPreview(obj, panel)
             p = symphonyui.builtin.previews.StimuliPreview(panel, @()obj.createAmpStimulus());
         end
@@ -29,11 +44,16 @@ classdef Ramp < edu.washington.riekelab.protocols.RiekeLabProtocol
         function prepareRun(obj)
             prepareRun@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
             
-            obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
-            obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp));
-            obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
-                'baselineRegion', [0 obj.preTime], ...
-                'measurementRegion', [obj.preTime obj.preTime+obj.stimTime]);
+            if numel(obj.rig.getDeviceNames('Amp')) < 2
+                obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+                obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp));
+                obj.showFigure('symphonyui.builtin.figures.ResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, ...
+                    'baselineRegion', [0 obj.preTime], ...
+                    'measurementRegion', [obj.preTime obj.preTime+obj.stimTime]);
+            else
+                obj.showFigure('edu.washington.riekelab.figures.DualResponseFigure', obj.rig.getDevice(obj.amp), obj.rig.getDevice(obj.amp2));
+                obj.showFigure('edu.washington.riekelab.figures.DualMeanResponseFigure', obj.rig.getDevice(obj.amp), obj.rig.getDevice(obj.amp2));
+            end
         end
         
         function stim = createAmpStimulus(obj)
@@ -55,6 +75,10 @@ classdef Ramp < edu.washington.riekelab.protocols.RiekeLabProtocol
             
             epoch.addStimulus(obj.rig.getDevice(obj.amp), obj.createAmpStimulus());
             epoch.addResponse(obj.rig.getDevice(obj.amp));
+            
+            if numel(obj.rig.getDeviceNames('Amp')) >= 2
+                epoch.addResponse(obj.rig.getDevice(obj.amp2));
+            end
         end
         
         function prepareInterval(obj, interval)
@@ -70,6 +94,16 @@ classdef Ramp < edu.washington.riekelab.protocols.RiekeLabProtocol
         
         function tf = shouldContinueRun(obj)
             tf = obj.numEpochsCompleted < obj.numberOfAverages;
+        end
+        
+        function a = get.amp2(obj)
+            amps = obj.rig.getDeviceNames('Amp');
+            if numel(amps) < 2
+                a = '(None)';
+            else
+                i = find(~ismember(amps, obj.amp), 1);
+                a = amps{i};
+            end
         end
         
     end
