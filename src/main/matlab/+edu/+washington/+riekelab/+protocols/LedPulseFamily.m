@@ -70,7 +70,7 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         end
         
         function [stim, lightAmplitude] = createLedStimulus(obj, pulseNum)
-            lightAmplitude = obj.firstLightAmplitude * 2^(double(pulseNum) - 1);
+            lightAmplitude = obj.amplitudeForPulseNum(pulseNum);
             
             gen = symphonyui.builtin.stimuli.PulseGenerator();
             
@@ -83,6 +83,10 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             gen.units = 'V';
             
             stim = gen.generate();
+        end
+        
+        function a = amplitudeForPulseNum(obj, pulseNum)
+            a = obj.firstLightAmplitude * 2^(double(pulseNum) - 1);
         end
         
         function prepareEpoch(obj, epoch)
@@ -113,6 +117,14 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         
         function tf = shouldContinueRun(obj)
             tf = obj.numEpochsCompleted < obj.numberOfAverages * obj.pulsesInFamily;
+        end
+        
+        function [tf, msg] = isValid(obj)
+            [tf, msg] = isValid@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
+            if tf && obj.amplitudeForPulseNum(obj.pulsesInFamily) > 10.239
+                tf = false;
+                msg = 'Last pulse too big';
+            end
         end
         
         function a = get.amp2(obj)
