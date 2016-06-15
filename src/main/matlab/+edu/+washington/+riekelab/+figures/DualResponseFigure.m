@@ -1,5 +1,5 @@
 classdef DualResponseFigure < symphonyui.core.FigureHandler
-    % Plots the response of two specified devices.
+    % Plots the response of two specified devices in the most recent epoch.
 
     properties (SetAccess = private)
         device1
