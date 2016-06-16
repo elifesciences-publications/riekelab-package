@@ -5,7 +5,7 @@ classdef Ramp < edu.washington.riekelab.protocols.RiekeLabProtocol
         preTime = 50                    % Ramp leading duration (ms)
         stimTime = 500                  % Ramp duration (ms)
         tailTime = 50                   % Ramp trailing duration (ms)
-        rampAmplitude = 100             % Ramp amplitude (mV or pA)
+        rampAmplitude = 100             % Ramp amplitude (mV or pA depending on amp mode)
     end
     
     properties (Dependent, SetAccess = private)

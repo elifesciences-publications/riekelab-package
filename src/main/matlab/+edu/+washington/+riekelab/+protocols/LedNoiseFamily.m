@@ -7,12 +7,12 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         tailTime = 100                  % Noise trailing duration (ms)
         frequencyCutoff = 60            % Noise frequency cutoff for smoothing (Hz)
         numberOfFilters = 4             % Number of filters in cascade for noise smoothing
-        startStdv = 0.005               % First noise standard deviation, post-smoothing (Hz)
+        startStdv = 0.005               % First noise standard deviation, post-smoothing (V or norm. [0-1] depending on LED units)
         stdvMultiplier = 3              % Amount to multiply the starting standard deviation by with each new multiple 
         stdvMultiples = uint16(3)       % Number of standard deviation multiples in family
         repeatsPerStdv = uint16(5)      % Number of times to repeat each standard deviation multiple
         useRandomSeed = false           % Use a random seed for each standard deviation multiple?
-        lightMean = 0.1                 % Noise and LED background mean (V)
+        lightMean = 0.1                 % Noise and LED background mean (V or norm. [0-1] depending on LED units)
         amp                             % Input amplifier
     end
     
@@ -92,7 +92,8 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
                     'measurementRegion2', [obj.preTime obj.preTime+obj.stimTime]);
             end
             
-            obj.rig.getDevice(obj.led).background = symphonyui.core.Measurement(obj.lightMean, 'V');
+            device = obj.rig.getDevice(obj.led);
+            device.background = symphonyui.core.Measurement(obj.lightMean, device.background.displayUnits);
         end
         
         function [stim, stdv] = createLedStimulus(obj, pulseNum, seed)
@@ -109,10 +110,15 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             gen.numFilters = obj.numberOfFilters;
             gen.mean = obj.lightMean;
             gen.seed = seed;
-            gen.upperLimit = 10.239;
-            gen.lowerLimit = -10.24;
             gen.sampleRate = obj.sampleRate;
-            gen.units = 'V';
+            gen.units = obj.rig.getDevice(obj.led).background.displayUnits;
+            if strcmp(gen.units, symphonyui.core.Measurement.NORMALIZED)
+                gen.upperLimit = 1;
+                gen.lowerLimit = 0;
+            else
+                gen.upperLimit = 10.239;
+                gen.lowerLimit = -10.24;
+            end
             
             stim = gen.generate();
         end

@@ -5,9 +5,9 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         preTime = 10                    % Pulse leading duration (ms)
         stimTime = 100                  % Pulse duration (ms)
         tailTime = 400                  % Pulse trailing duration (ms)
-        firstLightAmplitude = 1         % First pulse amplitude (V)
+        firstLightAmplitude = 0.1       % First pulse amplitude (V or norm. [0-1] depending on LED units)
         pulsesInFamily = uint16(3)      % Number of pulses in family
-        lightMean = 0                   % Pulse and LED background mean (V)
+        lightMean = 0                   % Pulse and LED background mean (V or norm. [0-1] depending on LED units)
         amp                             % Input amplifier
     end
     
@@ -66,7 +66,8 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
                     'measurementRegion2', [obj.preTime obj.preTime+obj.stimTime]);
             end
             
-            obj.rig.getDevice(obj.led).background = symphonyui.core.Measurement(obj.lightMean, 'V');
+            device = obj.rig.getDevice(obj.led);
+            device.background = symphonyui.core.Measurement(obj.lightMean, device.background.displayUnits);
         end
         
         function [stim, lightAmplitude] = createLedStimulus(obj, pulseNum)
@@ -80,7 +81,7 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             gen.amplitude = lightAmplitude;
             gen.mean = obj.lightMean;
             gen.sampleRate = obj.sampleRate;
-            gen.units = 'V';
+            gen.units = obj.rig.getDevice(obj.led).background.displayUnits;
             
             stim = gen.generate();
         end
@@ -121,9 +122,14 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         
         function [tf, msg] = isValid(obj)
             [tf, msg] = isValid@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
-            if tf && obj.amplitudeForPulseNum(obj.pulsesInFamily) > 10.239
-                tf = false;
-                msg = 'Last pulse too big';
+            if tf
+                units = obj.rig.getDevice(obj.led).background.displayUnits;
+                amplitude = obj.amplitudeForPulseNum(obj.pulsesInFamily);
+                if (strcmp(units, symphonyui.core.Measurement.NORMALIZED) && amplitude > 1) ...
+                        || (strcmp(units, 'V') && amplitude > 10.239)
+                    tf = false;
+                    msg = 'Last pulse too big';
+                end
             end
         end
         

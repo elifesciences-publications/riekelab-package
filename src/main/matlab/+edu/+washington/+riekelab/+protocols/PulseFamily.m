@@ -5,8 +5,8 @@ classdef PulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
         preTime = 50                    % Pulse leading duration (ms)
         stimTime = 500                  % Pulse duration (ms)
         tailTime = 50                   % Pulse trailing duration (ms)
-        firstPulseSignal = 100          % First pulse signal value (mV or pA)
-        incrementPerPulse = 10          % Increment value per each pulse (mV or pA)
+        firstPulseSignal = 100          % First pulse signal value (mV or pA depending on amp mode)
+        incrementPerPulse = 10          % Increment value per each pulse (mV or pA depending on amp mode)
         pulsesInFamily = uint16(11)     % Number of pulses in family
     end
     
@@ -15,7 +15,7 @@ classdef PulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
     end
     
     properties
-        amp2PulseSignal = -60           % Pulse signal value for secondary amp (mV or pA)
+        amp2PulseSignal = -60           % Pulse signal value for secondary amp (mV or pA depending on amp2 mode)
         numberOfAverages = uint16(5)    % Number of families
         interpulseInterval = 0          % Duration between pulses (s)
     end

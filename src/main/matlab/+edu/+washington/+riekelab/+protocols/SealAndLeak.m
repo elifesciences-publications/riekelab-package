@@ -7,12 +7,12 @@ classdef SealAndLeak < edu.washington.riekelab.protocols.RiekeLabProtocol
         preTime = 15                    % Pulse leading duration (ms)
         stimTime = 30                   % Pulse duration (ms)
         tailTime = 15                   % Pulse trailing duration (ms)
-        pulseAmplitude = 5              % Pulse amplitude (mV or pA)
-        leakAmpHoldSignal = -60         % Amplifier hold signal to use while in leak mode (mV or pA)
+        pulseAmplitude = 5              % Pulse amplitude (mV or pA depending on amp mode)
+        leakAmpHoldSignal = -60         % Amplifier hold signal to use while in leak mode (mV or pA depending on amp mode)
     end
     
     properties (Hidden, Dependent)
-        ampHoldSignal
+        ampHoldSignal                   % Amplifier hold signal (mV or pA depending on amp mode) 
     end
     
     properties (Dependent, SetAccess = private)

@@ -5,8 +5,8 @@ classdef LedPulse < edu.washington.riekelab.protocols.RiekeLabProtocol
         preTime = 10                    % Pulse leading duration (ms)
         stimTime = 100                  % Pulse duration (ms)
         tailTime = 400                  % Pulse trailing duration (ms)
-        lightAmplitude = 1              % Pulse amplitude (V)
-        lightMean = 0                   % Pulse and LED background mean (V)
+        lightAmplitude = 0.1            % Pulse amplitude (V or norm. [0-1] depending on LED units)
+        lightMean = 0                   % Pulse and LED background mean (V or norm. [0-1] depending on LED units)
         amp                             % Input amplifier
     end
     
@@ -64,7 +64,8 @@ classdef LedPulse < edu.washington.riekelab.protocols.RiekeLabProtocol
                     'measurementRegion2', [obj.preTime obj.preTime+obj.stimTime]);
             end
             
-            obj.rig.getDevice(obj.led).background = symphonyui.core.Measurement(obj.lightMean, 'V');
+            device = obj.rig.getDevice(obj.led);
+            device.background = symphonyui.core.Measurement(obj.lightMean, device.background.displayUnits);
         end
         
         function stim = createLedStimulus(obj)
@@ -76,7 +77,7 @@ classdef LedPulse < edu.washington.riekelab.protocols.RiekeLabProtocol
             gen.amplitude = obj.lightAmplitude;
             gen.mean = obj.lightMean;
             gen.sampleRate = obj.sampleRate;
-            gen.units = 'V';
+            gen.units = obj.rig.getDevice(obj.led).background.displayUnits;
             
             stim = gen.generate();
         end

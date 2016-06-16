@@ -5,7 +5,7 @@ classdef Pulse < edu.washington.riekelab.protocols.RiekeLabProtocol
         preTime = 50                    % Pulse leading duration (ms)
         stimTime = 500                  % Pulse duration (ms)
         tailTime = 50                   % Pulse trailing duration (ms)
-        pulseAmplitude = 100            % Pulse amplitude (mV or pA)
+        pulseAmplitude = 100            % Pulse amplitude (mV or pA depending on amp mode)
     end
     
     properties (Dependent, SetAccess = private)
@@ -13,7 +13,7 @@ classdef Pulse < edu.washington.riekelab.protocols.RiekeLabProtocol
     end
     
     properties
-        amp2PulseAmplitude = 0          % Pulse amplitude for secondary amp (mV or pA)
+        amp2PulseAmplitude = 0          % Pulse amplitude for secondary amp (mV or pA depending on amp2 mode)
         numberOfAverages = uint16(5)    % Number of epochs
         interpulseInterval = 0          % Duration between pulses (s)
     end
