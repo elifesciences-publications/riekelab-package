@@ -13,6 +13,9 @@ classdef Electrophysiology < symphonyui.core.persistent.descriptions.ExperimentD
                 'description', 'Institution where the experiment was performed');
             obj.addProperty('lab', '', ...
                 'description', 'Lab where experiment was performed');
+            obj.addProperty('rig', '', ...
+                'type', PropertyType('char', 'row', {'', 'B (two photon)', 'C (suction)', 'E (confocal)', 'F (old slice)', 'G (shared two photon)'}), ...
+                'description', 'Rig where experiment was performed');
         end
         
     end
