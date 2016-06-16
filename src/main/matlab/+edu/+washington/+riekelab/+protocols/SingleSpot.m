@@ -1,4 +1,5 @@
 classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
+    % Presents a set of single spot stimuli to a Stage canvas and records from the specified amplifier.
     
     properties
         amp                             % Output amplifier

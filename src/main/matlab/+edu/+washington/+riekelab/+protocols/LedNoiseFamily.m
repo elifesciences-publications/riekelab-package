@@ -1,4 +1,13 @@
 classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
+    % Presents families of gaussian noise stimuli to a specified LED and records responses from a specified amplifier.
+    % Each family consists of a set of noise stimuli with the standard deviation of noise starting at startStdv. Each
+    % standard deviation value is repeated repeatsPerStdv times before moving to the next standard deviation value which
+    % is calculated by multiplying startStdv by stdvMultiplier^sdNum. The family is complete when this sequence has been
+    % executed stdvMultiples times.
+    %
+    % For example, with values startStdv = 0.005, stdvMultiplier = 3, stdvMultiples = 3, and repeatsPerStdv = 5, the
+    % sequence of noise stimuli standard deviation values in each family would be: 0.005 five times then 0.015 fives 
+    % times then 0.045 five times.
     
     properties
         led                             % Output LED

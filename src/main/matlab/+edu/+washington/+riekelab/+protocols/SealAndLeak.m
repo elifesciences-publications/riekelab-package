@@ -1,4 +1,7 @@
 classdef SealAndLeak < edu.washington.riekelab.protocols.RiekeLabProtocol
+    % Presents a set of infinitely repeating rectangular pulse stimuli to a specified amplifier. This protocol records
+    % and displays no responses. Instead it assumes you have an oscilloscope attached to your rig with which you can
+    % view the amplifier response.
     
     properties
         amp                             % Output amplifier
