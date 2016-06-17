@@ -135,7 +135,7 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
                 if (strcmp(units, symphonyui.core.Measurement.NORMALIZED) && amplitude > 1) ...
                         || (strcmp(units, 'V') && amplitude > 10.239)
                     tf = false;
-                    msg = 'Last pulse too big';
+                    msg = 'Last pulse amplitude too large';
                 end
             end
         end
