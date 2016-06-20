@@ -107,7 +107,7 @@ end
 
 % TODO: This function is equivalent to Max's getFrameTiming and should be replaced when that becomes commonized
 function i = getFlipIndices(sweep, usePeaks)
-    if ~usePeaks
+    if usePeaks
         % Smooth out non-monotonicity
         sweep = lowPassFilter(sweep, 360, 1/1e4); 
     end
