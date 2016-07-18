@@ -109,7 +109,7 @@ classdef LedNoiseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             sdNum = floor((double(pulseNum) - 1) / double(obj.repeatsPerStdv));
             stdv = obj.stdvMultiplier^sdNum * obj.startStdv;
             
-            gen = edu.washington.riekelab.stimuli.GaussianNoiseGenerator();
+            gen = edu.washington.riekelab.stimuli.GaussianNoiseGeneratorV2();
             
             gen.preTime = obj.preTime;
             gen.stimTime = obj.stimTime;
