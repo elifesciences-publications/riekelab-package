@@ -8,7 +8,7 @@ classdef ConfocalTwoAmp < edu.washington.riekelab.rigs.Confocal
             
             daq = obj.daqController;
             
-            % Remove any device bound to the analog input 1 channel
+            % Remove device bound to the analog output 1 channel
             for i = 1:numel(obj.devices)
                 dev = obj.devices{i};
                 s = dev.outputStreams;
