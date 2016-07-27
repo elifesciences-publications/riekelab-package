@@ -1,8 +1,7 @@
-% Generates a binary noise stimulus. Noise generated consists of periodic discrete updates -- e.g. new value chosen 
-% every 2 ms -- permitting noise to be produced which looks like light output of a computer monitor (e.g. new value
-% every 16 ms.
-
 classdef BinaryNoiseGenerator < symphonyui.core.StimulusGenerator
+    % Generates a binary noise stimulus. Noise generated consists of periodic discrete updates -- e.g. new value chosen 
+    % every 2 ms -- permitting noise to be produced which looks like light output of a computer monitor (e.g. new value
+    % every 16 ms.
     
     properties
         preTime     % Leading duration (ms)

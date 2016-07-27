@@ -1,6 +1,5 @@
-% Generates a gaussian noise stimulus.
-
 classdef GaussianNoiseGenerator < symphonyui.core.StimulusGenerator
+    % Generates a gaussian noise stimulus.
     
     properties
         preTime             % Leading duration (ms)

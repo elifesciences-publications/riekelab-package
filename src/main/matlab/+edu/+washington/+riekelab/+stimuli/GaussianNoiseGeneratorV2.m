@@ -1,7 +1,6 @@
-% Generates a gaussian noise stimulus. This is version 2 of GaussianNoiseGenerator. Version 1 does not apply multiple 
-% filter poles correctly or scale the post-smoothed noise correctly.
-
 classdef GaussianNoiseGeneratorV2 < symphonyui.core.StimulusGenerator
+    % Generates a gaussian noise stimulus. This is version 2 of GaussianNoiseGenerator. Version 1 does not apply 
+    % multiple filter poles correctly or scale the post-smoothed noise correctly.
     
     properties
         preTime             % Leading duration (ms)
