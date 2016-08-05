@@ -48,7 +48,7 @@ classdef FrameTimingFigure < symphonyui.core.FigureHandler
         function handleEpoch(obj, epoch)
             info = obj.stageDevice.getPlayInfo();
             if isa(info, 'MException')
-                error(['Stage encountered an error during the presentation: ' info.message]);
+                rethrow(info);
             end
             if ~epoch.hasResponse(obj.frameMonitor)
                 error(['Epoch does not contain a response for ' obj.frameMonitor.name]);

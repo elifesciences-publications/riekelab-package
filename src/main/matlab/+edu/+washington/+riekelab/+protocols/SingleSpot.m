@@ -9,7 +9,7 @@ classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
         spotIntensity = 1.0             % Spot light intensity (0-1)
         spotDiameter = 300              % Spot diameter size (um)
         backgroundIntensity = 0.5       % Background light intensity (0-1)
-        centerOffset = [0, 0]           % Spot [x, y] center offset (um)
+        centerOffset = [0, 0]           % Spot center offset [x, y] (um)
         numberOfAverages = uint16(5)    % Number of epochs
         interpulseInterval = 0          % Duration between spots (s)
     end
