@@ -14,11 +14,9 @@ classdef DualResponseFigure < symphonyui.core.FigureHandler
     properties (Access = private)
         axesHandle1
         sweep1
-        storedSweep1
         
         axesHandle2
         sweep2
-        storedSweep2
     end
 
     methods
@@ -42,6 +40,24 @@ classdef DualResponseFigure < symphonyui.core.FigureHandler
             obj.storedSweepColor2 = ip.Results.storedSweepColor2;
 
             obj.createUi();
+            
+            stored1 = obj.storedSweep1();
+            if ~isempty(stored1)
+                stored1.line = line(stored1.x, stored1.y, ...
+                    'Parent', obj.axesHandle1, ...
+                    'Color', obj.storedSweepColor1, ...
+                    'HandleVisibility', 'off');
+            end
+            obj.storedSweep1(stored1);
+            
+            stored2 = obj.storedSweep2();
+            if ~isempty(stored2)
+                stored2.line = line(stored2.x, stored2.y, ...
+                    'Parent', obj.axesHandle2, ...
+                    'Color', obj.storedSweepColor2, ...
+                    'HandleVisibility', 'off');
+            end
+            obj.storedSweep2(stored2);
         end
 
         function createUi(obj)
@@ -54,6 +70,12 @@ classdef DualResponseFigure < symphonyui.core.FigureHandler
                 'Separator', 'on', ...
                 'ClickedCallback', @obj.onSelectedStoreSweep);
             setIconImage(storeSweepButton, symphonyui.app.App.getResource('icons', 'sweep_store.png'));
+            
+            clearSweepsButton = uipushtool( ...
+                'Parent', toolbar, ...
+                'TooltipString', 'Clear Sweep', ...
+                'ClickedCallback', @obj.onSelectedClearSweep);
+            setIconImage(clearSweepsButton, symphonyui.app.App.getResource('icons', 'sweep_clear.png'));
             
             obj.axesHandle1 = subplot(2, 1, 1, ...
                 'Parent', obj.figureHandle, ...
@@ -102,9 +124,13 @@ classdef DualResponseFigure < symphonyui.core.FigureHandler
                     y = [];
                 end
                 if isempty(sweep)
-                    sweep = line(x, y, 'Parent', axesHandle, 'Color', sweepColor);
+                    sweep.x = x;
+                    sweep.y = y;
+                    sweep.line = line(sweep.x, sweep.y, 'Parent', axesHandle, 'Color', sweepColor);
                 else
-                    set(sweep, 'XData', x, 'YData', y);
+                    sweep.x = x;
+                    sweep.y = y;
+                    set(sweep.line, 'XData', sweep.x, 'YData', sweep.y);
                 end
                 ylabel(axesHandle, units, 'Interpreter', 'none');
             end
@@ -115,22 +141,69 @@ classdef DualResponseFigure < symphonyui.core.FigureHandler
     methods (Access = private)
 
         function onSelectedStoreSweep(obj, ~, ~)
-            if ~isempty(obj.storedSweep1)
-                delete(obj.storedSweep1);
-            end
-            if ~isempty(obj.storedSweep2)
-                delete(obj.storedSweep2);
+            obj.storeSweep();
+        end
+        
+        function storeSweep(obj)
+            obj.clearSweep();
+            
+            store1 = storeSweep(obj.sweep1, obj.axesHandle1, obj.storedSweepColor1);
+            store2 = storeSweep(obj.sweep2, obj.axesHandle2, obj.storedSweepColor2);
+            
+            function store = storeSweep(store, axesHandle, storedSweepColor)
+                if ~isempty(store)
+                    store.line = copyobj(store.line, axesHandle);
+                    set(store.line, ...
+                        'Color', storedSweepColor, ...
+                        'HandleVisibility', 'off');
+                end
             end
             
-            obj.storedSweep1 = storeSweep(obj.sweep1, obj.axesHandle1, obj.storedSweepColor1);
-            obj.storedSweep2 = storeSweep(obj.sweep2, obj.axesHandle2, obj.storedSweepColor2);
-            
-            function ss = storeSweep(sweep, axesHandle, storedSweepColor)
-                ss = copyobj(sweep, axesHandle);
-                set(ss, ...
-                    'Color', storedSweepColor, ...
-                    'HandleVisibility', 'off');
+            obj.storedSweep1(store1);
+            obj.storedSweep2(store2);
+        end
+        
+        function onSelectedClearSweep(obj, ~, ~)
+            obj.clearSweep();
+        end
+        
+        function clearSweep(obj)
+            stored1 = obj.storedSweep1();
+            if ~isempty(stored1)
+                delete(stored1.line);
             end
+            
+            stored2 = obj.storedSweep2();
+            if ~isempty(stored2)
+                delete(stored2.line);
+            end
+            
+            obj.storedSweep1([]);
+            obj.storedSweep2([]);
+        end
+
+    end
+    
+    methods (Static)
+
+        function sweep = storedSweep1(sweep)
+            % This method stores a sweep1 across figure handlers.
+
+            persistent stored;
+            if nargin > 0
+                stored = sweep;
+            end
+            sweep = stored;
+        end
+        
+        function sweep = storedSweep2(sweep)
+            % This method stores a sweep2 across figure handlers.
+
+            persistent stored;
+            if nargin > 0
+                stored = sweep;
+            end
+            sweep = stored;
         end
 
     end
