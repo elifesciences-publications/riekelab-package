@@ -16,6 +16,13 @@ classdef Electrophysiology < symphonyui.core.persistent.descriptions.ExperimentD
             obj.addProperty('rig', '', ...
                 'type', PropertyType('char', 'row', {'', 'B (two photon)', 'C (suction)', 'E (confocal)', 'F (old slice)', 'G (shared two photon)'}), ...
                 'description', 'Rig where experiment was performed');
+            
+            % Try to auto-detect the appropriate rig property value
+            rig = obj.getPropertyDescriptors().findByName('rig');
+            index = find(strncmpi(rig.type.domain, getenv('RIG_LETTER'), 1), 1);
+            if ~isempty(index)
+                rig.value = rig.type.domain{index};
+            end
         end
         
     end
