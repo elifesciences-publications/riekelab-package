@@ -16,11 +16,9 @@ classdef DualMeanResponseFigure < symphonyui.core.FigureHandler
     properties (Access = private)
         axesHandle1
         sweeps1
-        storedSweeps1
         
         axesHandle2
         sweeps2
-        storedSweeps2
     end
     
     methods
@@ -48,6 +46,24 @@ classdef DualMeanResponseFigure < symphonyui.core.FigureHandler
             obj.storedSweepColor2 = ip.Results.storedSweepColor2;
             
             obj.createUi();
+            
+            stored1 = obj.storedSweeps1();
+            for i = 1:numel(stored1)
+                stored1{i}.line = line(stored1{i}.x, stored1{i}.y, ...
+                    'Parent', obj.axesHandle1, ...
+                    'Color', obj.storedSweepColor1, ...
+                    'HandleVisibility', 'off');
+            end
+            obj.storedSweeps1(stored1);
+            
+            stored2 = obj.storedSweeps2();
+            for i = 1:numel(stored2)
+                stored2{i}.line = line(stored2{i}.x, stored2{i}.y, ...
+                    'Parent', obj.axesHandle2, ...
+                    'Color', obj.storedSweepColor2, ...
+                    'HandleVisibility', 'off');
+            end
+            obj.storedSweeps2(stored2);
         end
         
         function createUi(obj)
@@ -60,6 +76,12 @@ classdef DualMeanResponseFigure < symphonyui.core.FigureHandler
                 'Separator', 'on', ...
                 'ClickedCallback', @obj.onSelectedStoreSweeps);
             setIconImage(storeSweepsButton, symphonyui.app.App.getResource('icons', 'sweep_store.png'));
+            
+            clearSweepsButton = uipushtool( ...
+                'Parent', toolbar, ...
+                'TooltipString', 'Clear Sweeps', ...
+                'ClickedCallback', @obj.onSelectedClearSweeps);
+            setIconImage(clearSweepsButton, symphonyui.app.App.getResource('icons', 'sweep_clear.png'));
             
             obj.axesHandle1 = subplot(2, 1, 1, ...
                 'Parent', obj.figureHandle, ...
@@ -139,15 +161,17 @@ classdef DualMeanResponseFigure < symphonyui.core.FigureHandler
                 end
 
                 if isempty(sweepIndex)
-                    sweep.line = line(x, y, 'Parent', axesHandle, 'Color', sweepColor);
                     sweep.parameters = parameters;
+                    sweep.x = x;
+                    sweep.y = y;
                     sweep.count = 1;
+                    sweep.line = line(sweep.x, sweep.y, 'Parent', axesHandle, 'Color', sweepColor);
                     sweeps{end + 1} = sweep;
                 else
                     sweep = sweeps{sweepIndex};
-                    cy = get(sweep.line, 'YData');
-                    set(sweep.line, 'YData', (cy * sweep.count + y) / (sweep.count + 1));
+                    sweep.y = (sweep.y * sweep.count + y) / (sweep.count + 1);
                     sweep.count = sweep.count + 1;
+                    set(sweep.line, 'YData', sweep.y);
                     sweeps{sweepIndex} = sweep;
                 end
 
@@ -160,32 +184,71 @@ classdef DualMeanResponseFigure < symphonyui.core.FigureHandler
     methods (Access = private)
         
         function onSelectedStoreSweeps(obj, ~, ~)
-            if ~isempty(obj.storedSweeps1)
-                for i = 1:numel(obj.storedSweeps1)
-                    delete(obj.storedSweeps1{i});
-                end
-                obj.storedSweeps1 = {};
-            end
-            if ~isempty(obj.storedSweeps2)
-                for i = 1:numel(obj.storedSweeps2)
-                    delete(obj.storedSweeps2{i});
-                end
-                obj.storedSweeps2 = {};
-            end
+            obj.storeSweeps();
+        end
+        
+        function storeSweeps(obj)
+            obj.clearSweeps();
             
-            obj.storedSweeps1 = storeSweeps(obj.sweeps1, obj.axesHandle1, obj.storedSweepColor1);
-            obj.storedSweeps2 = storeSweeps(obj.sweeps2, obj.axesHandle2, obj.storedSweepColor2);
+            store1 = storeSweeps(obj.sweeps1, obj.axesHandle1, obj.storedSweepColor1);
+            store2 = storeSweeps(obj.sweeps2, obj.axesHandle2, obj.storedSweepColor2);
             
-            function ss = storeSweeps(sweeps, axesHandle, storedSweepColor)         
-                for k = 1:numel(sweeps)
-                    ss{k} = copyobj(sweeps{k}.line, axesHandle); %#ok<AGROW>
-                    set(ss{k}, ...
+            function store = storeSweeps(store, axesHandle, storedSweepColor)         
+                for k = 1:numel(store)
+                    store{k}.line = copyobj(store{k}.line, axesHandle);
+                    set(store{k}.line, ...
                         'Color', storedSweepColor, ...
                         'HandleVisibility', 'off');
                 end
             end
+            
+            obj.storedSweeps1(store1);
+            obj.storedSweeps2(store2);
         end
         
+        function onSelectedClearSweeps(obj, ~, ~)
+            obj.clearSweeps();
+        end
+        
+        function clearSweeps(obj)
+            stored1 = obj.storedSweeps1();
+            for i = 1:numel(stored1)
+                delete(stored1{i}.line);
+            end
+            
+            stored2 = obj.storedSweeps2();
+            for i = 1:numel(stored2)
+                delete(stored2{i}.line);
+            end
+            
+            obj.storedSweeps1([]);
+            obj.storedSweeps2([]);
+        end
+        
+    end
+    
+    methods (Static)
+
+        function sweeps = storedSweeps1(sweeps)
+            % This method stores sweeps1 across figure handlers.
+
+            persistent stored;
+            if nargin > 0
+                stored = sweeps;
+            end
+            sweeps = stored;
+        end
+        
+        function sweeps = storedSweeps2(sweeps)
+            % This method stores sweeps2 across figure handlers.
+
+            persistent stored;
+            if nargin > 0
+                stored = sweeps;
+            end
+            sweeps = stored;
+        end
+
     end
         
 end
