@@ -100,7 +100,7 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
                     timeLeft = sprintf('%.0f seconds', s);
                 end
             end
-            set(obj.timeText, 'String', ['Estimated time left: ' timeLeft]);
+            set(obj.timeText, 'String', sprintf('Estimated time left: %s (assuming %s second inter-epoch interval)', timeLeft, num2str(obj.intervalSeconds)));
         end
         
     end
