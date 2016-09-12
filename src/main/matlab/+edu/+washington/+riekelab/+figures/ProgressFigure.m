@@ -51,11 +51,11 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
                 'Parent', progressLayout, ...
                 'String', '', ...
                 'HorizontalAlignment', 'left');
-            set(progressLayout, 'Heights', [23 16 23]);
+            set(progressLayout, 'Heights', [23 20 23]);
             
             uix.Empty('Parent', mainLayout);
             
-            set(mainLayout, 'Heights', [-1 23+5+16+5+23 -1]);
+            set(mainLayout, 'Heights', [-1 23+5+20+5+23 -1]);
             
             set(obj.figureHandle, 'Name', 'Progress');
         end
