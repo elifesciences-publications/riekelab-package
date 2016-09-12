@@ -89,7 +89,7 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
                 n = obj.totalNumEpochs - obj.numEpochsCompleted;
                 d = obj.averageEpochDuration * n;
                 if n > 0
-                    d = d + seconds(obj.intervalSeconds) * (n - 1);
+                    d = d + seconds(obj.intervalSeconds) * n;
                 end
                 [h, m, s] = hms(d);
                 if h >= 1
