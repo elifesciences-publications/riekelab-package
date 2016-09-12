@@ -87,7 +87,10 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
             timeLeft = '';
             if ~isempty(obj.averageEpochDuration)
                 n = obj.totalNumEpochs - obj.numEpochsCompleted;
-                d = obj.averageEpochDuration * n + seconds(obj.intervalSeconds) * (n - 1);
+                d = obj.averageEpochDuration * n;
+                if n > 0
+                    d = d + seconds(obj.intervalSeconds) * (n - 1);
+                end
                 [h, m, s] = hms(d);
                 if h >= 1
                     timeLeft = sprintf('%.0f hours, %.0f minutes', h, m);
