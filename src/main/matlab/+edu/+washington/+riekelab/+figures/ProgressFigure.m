@@ -94,7 +94,7 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
                 [h, m, s] = hms(d);
                 if h >= 1
                     timeLeft = sprintf('%.0f hours, %.0f minutes', h, m);
-                elseif minutes(d) >= 1
+                elseif m >= 1
                     timeLeft = sprintf('%.0f minutes, %.0f seconds', m, s);
                 else
                     timeLeft = sprintf('%.0f seconds', s);
