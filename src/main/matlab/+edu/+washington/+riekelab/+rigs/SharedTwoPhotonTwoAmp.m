@@ -12,14 +12,14 @@ classdef SharedTwoPhotonTwoAmp < edu.washington.riekelab.rigs.SharedTwoPhoton
             for i = 1:numel(obj.devices)
                 dev = obj.devices{i};
                 s = dev.outputStreams;
-                if ~isempty(s) && strcmp(s{1}.name, 'ANALOG_OUT.1')
-                    dev.unbindStream('ANALOG_OUT.1');
+                if ~isempty(s) && strcmp(s{1}.name, 'ao1')
+                    dev.unbindStream('ao1');
                     obj.removeDevice(dev);
                     break;
                 end
             end
             
-            amp2 = MultiClampDevice('Amp2', 2).bindStream(daq.getStream('ANALOG_OUT.1')).bindStream(daq.getStream('ANALOG_IN.3'));
+            amp2 = MultiClampDevice('Amp2', 2).bindStream(daq.getStream('ao1')).bindStream(daq.getStream('ai3'));
             obj.addDevice(amp2);
         end
         

@@ -15,11 +15,11 @@ classdef SharedTwoPhotonWithMicrodisplay < edu.washington.riekelab.rigs.SharedTw
             ramps('high')    = 65535 * importdata(riekelab.Package.getResource('calibration', 'shared_two_photon', 'microdisplay_high_gamma_ramp.txt'));
             ramps('maximum') = linspace(0, 65535, 256);
             microdisplay = riekelab.devices.MicrodisplayDevice('gammaRamps', ramps, 'micronsPerPixel', 3.3, 'comPort', 'COM1');
-            microdisplay.bindStream(daq.getStream('DIGITAL_OUT.1'));
-            daq.getStream('DIGITAL_OUT.1').setBitPosition(microdisplay, 15);
+            microdisplay.bindStream(daq.getStream('doport1'));
+            daq.getStream('doport1').setBitPosition(microdisplay, 15);
             obj.addDevice(microdisplay);
             
-            frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(daq.getStream('ANALOG_IN.7'));
+            frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(daq.getStream('ai7'));
             obj.addDevice(frameMonitor);
         end
         
