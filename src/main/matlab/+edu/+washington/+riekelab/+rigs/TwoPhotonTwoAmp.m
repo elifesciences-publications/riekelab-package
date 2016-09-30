@@ -11,7 +11,7 @@ classdef TwoPhotonTwoAmp < edu.washington.riekelab.rigs.TwoPhoton
             % Remove device bound to the analog output 1 channel
             for i = 1:numel(obj.devices)
                 dev = obj.devices{i};
-                s = dev.outputStreams;
+                s = dev.getOutputStreams();
                 if ~isempty(s) && strcmp(s{1}.name, 'ao1')
                     dev.unbindStream('ao1');
                     obj.removeDevice(dev);
