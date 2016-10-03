@@ -6,8 +6,9 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
     
     properties (Access = private)
         numEpochsCompleted
-        intervalSeconds
+        numIntervalsCompleted
         averageEpochDuration
+        averageIntervalDuration
         statusText
         progressBar
         timeText
@@ -15,14 +16,10 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
     
     methods
         
-        function obj = ProgressFigure(totalNumEpochs, varargin)            
-            ip = inputParser();
-            ip.addParameter('intervalSeconds', 0, @(x)isscalar(x));
-            ip.parse(varargin{:});
-            
+        function obj = ProgressFigure(totalNumEpochs)            
             obj.totalNumEpochs = double(totalNumEpochs);
             obj.numEpochsCompleted = 0;
-            obj.intervalSeconds = ip.Results.intervalSeconds;
+            obj.numIntervalsCompleted = 0;
             
             obj.createUi();
             
@@ -58,23 +55,43 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
             set(mainLayout, 'Heights', [-1 23+5+20+5+23 -1]);
             
             set(obj.figureHandle, 'Name', 'Progress');
+            set(obj.figureHandle, 'Toolbar', 'none');
+            
+            if isempty(obj.settings.figurePosition)
+                p = get(obj.figureHandle, 'Position');
+                set(obj.figureHandle, 'Position', [p(1) p(2) p(3) 103]);
+            end
         end
         
-        function handleEpoch(obj, epoch)
-            obj.numEpochsCompleted = obj.numEpochsCompleted + 1;
-            
-            if isempty(obj.averageEpochDuration)
-                obj.averageEpochDuration = epoch.duration;
+        function handleEpochOrInterval(obj, epochOrInterval)
+            if epochOrInterval.isInterval()
+                obj.numIntervalsCompleted = obj.numIntervalsCompleted + 1;
+                
+                interval = epochOrInterval;
+                if isempty(obj.averageIntervalDuration)
+                    obj.averageIntervalDuration = interval.duration;
+                else
+                    obj.averageIntervalDuration = obj.averageIntervalDuration * (obj.numIntervalsCompleted - 1)/obj.numIntervalsCompleted + interval.duration/obj.numIntervalsCompleted;
+                end
             else
-                obj.averageEpochDuration = obj.averageEpochDuration * (obj.numEpochsCompleted - 1)/obj.numEpochsCompleted + epoch.duration/obj.numEpochsCompleted;
+                obj.numEpochsCompleted = obj.numEpochsCompleted + 1;
+
+                epoch = epochOrInterval;
+                if isempty(obj.averageEpochDuration)
+                    obj.averageEpochDuration = epoch.duration;
+                else
+                    obj.averageEpochDuration = obj.averageEpochDuration * (obj.numEpochsCompleted - 1)/obj.numEpochsCompleted + epoch.duration/obj.numEpochsCompleted;
+                end
+                
+                obj.updateProgress();
             end
-            
-            obj.updateProgress();
         end
         
         function clear(obj)            
             obj.numEpochsCompleted = 0;
+            obj.numIntervalsCompleted = 0;
             obj.averageEpochDuration = [];
+            obj.averageIntervalDuration = [];
             
             obj.updateProgress();
         end
@@ -85,11 +102,11 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
             obj.progressBar.setValue(obj.numEpochsCompleted);
             
             timeLeft = '';
-            if ~isempty(obj.averageEpochDuration)
+            if ~isempty(obj.averageEpochDuration) && ~isempty(obj.averageIntervalDuration)
                 n = obj.totalNumEpochs - obj.numEpochsCompleted;
                 d = obj.averageEpochDuration * n;
                 if n > 0
-                    d = d + seconds(obj.intervalSeconds) * n;
+                    d = d + obj.averageIntervalDuration * n;
                 end
                 [h, m, s] = hms(d);
                 if h >= 1
@@ -100,7 +117,7 @@ classdef ProgressFigure < symphonyui.core.FigureHandler
                     timeLeft = sprintf('%.0f seconds', s);
                 end
             end
-            set(obj.timeText, 'String', sprintf('Estimated time left: %s (assuming %s second inter-epoch interval)', timeLeft, num2str(obj.intervalSeconds)));
+            set(obj.timeText, 'String', sprintf('Estimated time left: %s', timeLeft));
         end
         
     end
