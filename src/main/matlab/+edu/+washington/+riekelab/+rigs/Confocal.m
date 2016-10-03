@@ -22,6 +22,8 @@ classdef Confocal < symphonyui.core.descriptions.RigDescription
                 {0.24, 0.63, 0.94, 2.02, 3.43, 1.86, 3.73}));
             red.addConfigurationSetting('gain', '', ...
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
+            red.addConfigurationSetting('lightPath', '', ...
+                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
             red.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'confocal', 'red_led_spectrum.txt')));
             obj.addDevice(red);
 
@@ -33,6 +35,8 @@ classdef Confocal < symphonyui.core.descriptions.RigDescription
                 {0.26, 0.52, 0.89, 2.30, 4.20, 1.88, 3.92}));
             uv.addConfigurationSetting('gain', '', ...
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
+            uv.addConfigurationSetting('lightPath', '', ...
+                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
             uv.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'confocal', 'uv_led_spectrum.txt')));
             obj.addDevice(uv);
 
@@ -44,6 +48,8 @@ classdef Confocal < symphonyui.core.descriptions.RigDescription
                 {0.26, 0.55, 0.93, 2.25, 4.17, 1.88, 3.99}));
             blue.addConfigurationSetting('gain', '', ...
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
+            blue.addConfigurationSetting('lightPath', '', ...
+                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
             blue.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'confocal', 'blue_led_spectrum.txt')));
             obj.addDevice(blue);
 

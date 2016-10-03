@@ -22,6 +22,8 @@ classdef TwoPhoton < symphonyui.core.descriptions.RigDescription
                 {0.29, 0.61, 1.01, 2.08, 4.41, 3.94}));
             red.addConfigurationSetting('gain', '', ...
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
+            red.addConfigurationSetting('lightPath', '', ...
+                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
             red.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'two_photon', 'red_led_spectrum.txt')));
             obj.addDevice(red);
             
@@ -33,6 +35,8 @@ classdef TwoPhoton < symphonyui.core.descriptions.RigDescription
                 {0.29, 0.71, 1.21, 2.54, 2.48, 2.71, 5.13}));
             uv.addConfigurationSetting('gain', '', ...
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
+            uv.addConfigurationSetting('lightPath', '', ...
+                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
             uv.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'two_photon', 'uv_led_spectrum.txt')));
             obj.addDevice(uv);
             
@@ -44,6 +48,8 @@ classdef TwoPhoton < symphonyui.core.descriptions.RigDescription
                 {0.29, 0.60, 1.02, 2.41, 4.58, 2.20, 4.32}));
             blue.addConfigurationSetting('gain', '', ...
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
+            blue.addConfigurationSetting('lightPath', '', ...
+                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
             blue.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'two_photon', 'blue_led_spectrum.txt')));
             obj.addDevice(blue);
             
