@@ -348,10 +348,16 @@ classdef DeviceConfigurator < symphonyui.ui.Module
             set(f, 'Position', [p(1) p(2) p(3) appbox.layoutHeight(obj.mainLayout)]);
         end
         
-        function onDeviceSetConfigurationSetting(obj, ~, ~)
-            obj.updateNdfsBox();
-            obj.updateGainBox();
-            obj.updateLightPathBox();
+        function onDeviceSetConfigurationSetting(obj, ~, event)
+            setting = event.data;
+            switch setting.name
+                case 'ndfs'
+                    obj.updateNdfsBox();
+                case 'gain'
+                    obj.updateGainBox();
+                case 'lightPath'
+                    obj.updateLightPathBox();
+            end
         end
         
         function onServiceInitializedRig(obj, ~, ~)
