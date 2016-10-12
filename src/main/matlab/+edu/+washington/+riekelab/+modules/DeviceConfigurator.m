@@ -88,7 +88,10 @@ classdef DeviceConfigurator < symphonyui.ui.Module
     methods (Access = private)
         
         function bindDevices(obj)
-            devices = [{} obj.leds obj.stage];
+            devices = obj.leds;
+            if ~isempty(obj.stage)
+                devices = [{} devices {obj.stage}];
+            end
             for i = 1:numel(devices)
                 obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'SetConfigurationSetting', @obj.onDeviceSetConfigurationSetting);
             end
