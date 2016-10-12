@@ -20,7 +20,7 @@ classdef DeviceConfigurator < symphonyui.ui.Module
             
             set(figureHandle, ...
                 'Name', 'Device Configurator', ...
-                'Position', screenCenter(314, 300), ...
+                'Position', screenCenter(330, 300), ...
                 'Resize', 'off');
             
             obj.mainLayout = uix.VBox( ...
@@ -134,8 +134,11 @@ classdef DeviceConfigurator < symphonyui.ui.Module
                     'String', availableNdfs, ...
                     'Value', find(cellfun(@(n)any(strcmp(n, activeNdfs)), availableNdfs)), ...
                     'Callback', @(h,d)obj.onSelectedNdfs(h, struct('led', led, 'ndfs', {h.String(h.Value)})));
+                Label( ...
+                    'Parent', ledLayout, ...
+                    'String', ['<html><font color="' colorFromLedName(led.name) '">&#9632;</font></html>']);
                 
-                set(ledLayout, 'Widths', [60 -1]);
+                set(ledLayout, 'Widths', [60 -1 9]);
             end
             
             set(ndfsLayout, 'Heights', ones(1, numel(ndfsLayout.Children)) * 23);
@@ -208,8 +211,11 @@ classdef DeviceConfigurator < symphonyui.ui.Module
                     'HorizontalAlignment', 'left', ...
                     'Selection', find(strcmp(desc.value, {'low', 'medium', 'high'}), 1), ...
                     'SelectionChangeFcn', @(h,d)obj.onSelectedGain(h, struct('led', led, 'gain', h.Buttons{h.Selection})));
+                Label( ...
+                    'Parent', ledLayout, ...
+                    'String', ['<html><font color="' colorFromLedName(led.name) '">&#9632;</font></html>']);
                 
-                set(ledLayout, 'Widths', [60 -1]);
+                set(ledLayout, 'Widths', [60 -1 9]);
             end
             
             set(gainLayout, 'Heights', ones(1, numel(gainLayout.Children)) * 23);
@@ -291,7 +297,8 @@ classdef DeviceConfigurator < symphonyui.ui.Module
                 set(obj.lightPathControls.popupMenu, 'Value', '');
                 set(obj.lightPathControls.popupMenu, 'Enable', 'off');
             end
-            set(allLayout, 'Widths', [60 -1]);
+            uix.Empty('Parent', allLayout);
+            set(allLayout, 'Widths', [60 -1 9]);
             
             set(lightPathLayout, 'Heights', 23);
             
@@ -384,3 +391,10 @@ classdef DeviceConfigurator < symphonyui.ui.Module
     
 end
 
+function c = colorFromLedName(name)
+    split = strsplit(name);
+    c = split{1};
+    if strcmpi(c, 'uv')
+        c = '#EE82EE'; % violet
+    end
+end
