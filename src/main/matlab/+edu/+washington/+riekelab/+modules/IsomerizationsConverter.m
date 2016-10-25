@@ -358,7 +358,9 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         function pack(obj)
             f = obj.view.getFigureHandle();
             p = get(f, 'Position');
-            set(f, 'Position', [p(1) p(2) p(3) appbox.layoutHeight(obj.mainLayout)]);
+            h = appbox.layoutHeight(obj.mainLayout);
+            delta = p(4) - h;
+            set(f, 'Position', [p(1) p(2)+delta p(3) h]);
         end
         
         function onLedSetConfigurationSetting(obj, ~, event)
