@@ -80,25 +80,30 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             Button( ...
                 'Parent', parametersLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
+                'TooltipString', 'LED Help', ...
                 'Callback', @obj.onSelectedLedHelp);
             Button( ...
                 'Parent', parametersLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
+                'TooltipString', 'NDFs Help', ...
                 'Callback', @obj.onSelectedNdfsHelp);
             Button( ...
                 'Parent', parametersLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
+                'TooltipString', 'Gain Help', ...
                 'Callback', @obj.onSelectedGainHelp);
             Button( ...
                 'Parent', parametersLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
+                'TooltipString', 'Light Path Help', ...
                 'Callback', @obj.onSelectedLightPathHelp);
             Button( ...
                 'Parent', parametersLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
+                'TooltipString', 'Species Help', ...
                 'Callback', @obj.onSelectedSpeciesHelp);
             set(parametersLayout, ...
-                'Widths', [65 -1 22], ...
+                'Widths', [70 -1 22], ...
                 'Heights', [23 23 23 23 23]);
 
             obj.converterControls.box = uix.BoxPanel( ...
@@ -186,6 +191,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.populateNdfs();
             obj.populateGain();
             obj.populateLightPath();
+            obj.populateConverterBox();
+            obj.pack();
         end
 
         function onSelectedLedHelp(obj, ~, ~)
@@ -271,8 +278,81 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'Parent', obj.converterControls.box, ...
                 'Spacing', 7);
             
+            text = '';
+            led = get(obj.parametersControls.ledPopupMenu, 'Value');
+            if isempty(led)
+                text = 'LED must not be empty';
+            elseif isempty(obj.species)
+                text = 'Species must not be empty';
+            else
+                ndfs = led.getConfigurationSetting('ndfs');
+                gain = led.getConfigurationSetting('gain');
+                if isempty(gain)
+                    text = 'Gain must not be empty';
+                end
+                path = led.getConfigurationSetting('lightPath');
+                if isempty(path)
+                    text = 'Light path must not be empty';
+                end
+                photoreceptors = obj.species.getResource('photoreceptors');
+            end
+            
+            if isempty(text)
+                obj.converterControls.fields = containers.Map();
+                
+                keys = [{} {'volts'} photoreceptors.keys];
+                for i = 1:numel(keys)
+                    k = keys{i};
+                    layout = uix.HBox( ...
+                        'Parent', converterLayout, ...
+                        'Spacing', 7);
+                    if i == 1
+                        label = [capitalize(humanize(k)) ':']; 
+                    else
+                        label = [capitalize(humanize(k)) ' R*/s:'];
+                    end
+                    Label( ...
+                        'Parent', layout, ...
+                        'String', label);
+                    obj.converterControls.fields(k) = uicontrol( ...
+                        'Parent', layout, ...
+                        'Style', 'edit', ...
+                        'HorizontalAlignment', 'left');
+                    Button( ...
+                        'Parent', layout, ...
+                        'Icon', symphonyui.app.App.getResource('icons', 'copy.png'), ...
+                        'TooltipString', 'Copy To Clipboard', ...
+                        'Callback', @(h,d)obj.onSelectedCopy(h, struct('key', k)));
+                    set(layout, 'Widths', [70 -1 22]);
+                end
+                set(converterLayout, 'Heights', ones(1, numel(keys))*23);
+            else
+                Label( ...
+                    'Parent', converterLayout, ...
+                    'String', text, ...
+                    'HorizontalAlignment', 'center');
+                set(converterLayout, 'Heights', 23);
+            end
+            
             h = get(obj.mainLayout, 'Heights');
             set(obj.mainLayout, 'Heights', [h(1) 25+11+layoutHeight(converterLayout)+11]);
+        end
+        
+        function onSelectedCopy(obj, ~, event)
+            obj.requestFigureFocus();
+            obj.view.update();
+            
+            field = obj.converterControls.fields(event.key);
+            value = get(field, 'String');
+            disp(value);
+            clipboard('copy', value);
+        end
+        
+        function requestFigureFocus(obj)
+            warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+            javaFrame = get(obj.view.getFigureHandle(), 'JavaFrame');
+            warning('on','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+            javaFrame.getAxisComponent().requestFocus();
         end
         
         function pack(obj)
@@ -280,31 +360,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             p = get(f, 'Position');
             set(f, 'Position', [p(1) p(2) p(3) appbox.layoutHeight(obj.mainLayout)]);
         end
-
-        function onServiceBeganEpochGroup(obj, ~, ~)
-            obj.species = obj.findSpecies();
-            obj.populateSpecies();
-            %obj.populatePhotoreceptorList();
-        end
-
-        function onServiceEndedEpochGroup(obj, ~, ~)
-            obj.species = obj.findSpecies();
-            obj.populateSpecies();
-            %obj.populatePhotoreceptorList();
-        end
-
-        function onServiceClosedFile(obj, ~, ~)
-            obj.species = [];
-            obj.populateSpecies();
-        end
-
-        function onServiceInitializedRig(obj, ~, ~)
-            obj.unbindLeds();
-            obj.leds = obj.configurationService.getDevices('LED');
-            obj.populateLedList();
-            obj.bindLeds();
-        end
-
+        
         function onLedSetConfigurationSetting(obj, ~, event)
             setting = event.data;
             switch setting.name
@@ -315,6 +371,49 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 case 'lightPath'
                     obj.populateLightPath();
             end
+            
+            obj.populateConverterBox();
+            obj.pack();
+        end
+
+        function onServiceBeganEpochGroup(obj, ~, ~)
+            obj.species = obj.findSpecies();
+            
+            obj.populateSpecies();
+            obj.populateConverterBox();
+            
+            obj.pack();
+        end
+
+        function onServiceEndedEpochGroup(obj, ~, ~)
+            obj.species = obj.findSpecies();
+            
+            obj.populateSpecies();
+            obj.populateConverterBox();
+            
+            obj.pack();
+        end
+
+        function onServiceClosedFile(obj, ~, ~)
+            obj.species = [];
+            
+            obj.populateSpecies();
+            obj.populateConverterBox();
+            
+            obj.pack();
+        end
+
+        function onServiceInitializedRig(obj, ~, ~)
+            obj.unbindLeds();
+            
+            obj.leds = obj.configurationService.getDevices('LED');
+            
+            obj.populateParametersBox();
+            obj.populateConverterBox();
+            
+            obj.pack();
+            
+            obj.bindLeds();
         end
 
     end
