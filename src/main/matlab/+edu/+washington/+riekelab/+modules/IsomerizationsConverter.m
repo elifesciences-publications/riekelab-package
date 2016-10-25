@@ -196,7 +196,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function onSelectedLedHelp(obj, ~, ~)
-            obj.view.showMessage('onSelectedLedHelp');
+            obj.view.showMessage(['Select the LED for which to perform isomerizations conversions. This popup menu ' ...
+                'is populated based on the LEDs in the currently initialized rig.'], 'LED Help');
         end
 
         function populateNdfs(obj)
@@ -210,7 +211,9 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function onSelectedNdfsHelp(obj, ~, ~)
-            obj.view.showMessage('onSelectedNdfsHelp');
+            obj.view.showMessage(['The ndfs field is auto-populated by the value of the ''ndfs'' configuration ' ...
+                'setting on the selected LED. Device configuration settings may be changed through the ''Device ' ...
+                'Configurator'' module.'], 'NDFs Help');
         end
 
         function populateGain(obj)
@@ -224,7 +227,9 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function onSelectedGainHelp(obj, ~, ~)
-            obj.view.showMessage('onSelectedGainHelp');
+            obj.view.showMessage(['The gain field is auto-populated by the value of the ''gain'' configuration ' ...
+                'setting on the selected LED. Device configuration settings may be changed through the ''Device ' ...
+                'Configurator'' module.'], 'Gain Help');
         end
         
         function populateLightPath(obj)
@@ -238,7 +243,9 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function onSelectedLightPathHelp(obj, ~, ~)
-            obj.view.showMessage('onSelectedLightPathHelp');
+            obj.view.showMessage(['The light path field is auto-populated by the value of the ''lightPath'' configuration ' ...
+                'setting on the selected LED. Device configuration settings may be changed through the ''Device ' ...
+                'Configurator'' module.'], 'Light Path Help');
         end
 
         function populateSpecies(obj)
@@ -268,7 +275,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function onSelectedSpeciesHelp(obj, ~, ~)
-            obj.view.showMessage('onSelectedSpeciesHelp');
+            obj.view.showMessage(['The species field is auto-populated based on the species of the source of the ' ...
+                'current epoch group. If there is no current epoch group, this field will be empty.'], 'Species Help');
         end
         
         function populateConverterBox(obj)
