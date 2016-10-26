@@ -414,7 +414,6 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
             value = char(field.jcontrol.getText());
             clipboard('copy', value);
-            disp(['Copied: ' value]);
         end
         
         function pack(obj)
