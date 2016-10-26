@@ -93,7 +93,9 @@ classdef DeviceConfigurator < symphonyui.ui.Module
                 devices = [{} devices {obj.stage}];
             end
             for i = 1:numel(devices)
-                obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'SetConfigurationSetting', @obj.onDeviceSetConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'AddedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'SetConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'RemovedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
             end
         end
         
@@ -350,7 +352,7 @@ classdef DeviceConfigurator < symphonyui.ui.Module
             set(f, 'Position', [p(1) p(2)+delta p(3) h]);
         end
         
-        function onDeviceSetConfigurationSetting(obj, ~, event)
+        function onDeviceChangedConfigurationSetting(obj, ~, event)
             setting = event.data;
             switch setting.name
                 case 'ndfs'
