@@ -385,7 +385,23 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             path = led.getConfigurationSetting('lightPath');
             photoreceptors = obj.species.getResource('photoreceptors');
             
-            names = obj.converterControls.fields.keys;
+            if strcmp(event.fieldName, 'volts')
+                volts = str2double(value);
+            else
+                isom = str2double(value);
+                volts = edu.washington.riekelab.baudin.modules.IsomerizationsConverterUtilities.SymphonyIsomerizationsConverter( ...
+                    calibrations(gain), ...
+                    spectrum, ...
+                    photoreceptors(event.fieldName).spectrum, ...
+                    photoreceptors(event.fieldName).collectingArea, ...
+                    strjoin(ndfs, ';'), ...
+                    attenuations, ...
+                    'isomtovolts', ...
+                    isom);
+                set(obj.converterControls.fields('volts').control, 'String', num2str(volts));
+            end
+            
+            names = photoreceptors.keys;
             names(strcmp(names, event.fieldName)) = [];
             for i = 1:numel(names)
                 n = names{i};
@@ -397,10 +413,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                     strjoin(ndfs, ';'), ...
                     attenuations, ...
                     'voltstoisom', ...
-                    str2double(value));
-                
-                v = round(v);
-                set(obj.converterControls.fields(n).control, 'String', num2str(v));
+                    volts);
+                set(obj.converterControls.fields(n).control, 'String', num2str(round(v)));
             end
         end
         
@@ -412,6 +426,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
             value = char(field.jcontrol.getText());
             clipboard('copy', value);
+            disp(['Copied: ' value]);
         end
         
         function pack(obj)
