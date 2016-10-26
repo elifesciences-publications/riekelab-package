@@ -152,7 +152,10 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
         function bindLeds(obj)
             for i = 1:numel(obj.leds)
-                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'SetConfigurationSetting', @obj.onLedSetConfigurationSetting);
+                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'AddedConfigurationSetting', @obj.onLedChangedConfigurationSetting);
+                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'SetConfigurationSetting', @obj.onLedChangedConfigurationSetting);
+                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'RemovedConfigurationSetting', @obj.onLedChangedConfigurationSetting);
+                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'AddedResource', @obj.onLedAddedResource);
             end
         end
 
@@ -282,85 +285,103 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         function populateConverterBox(obj)
             import appbox.*;
             
-            converterLayout = uix.Grid( ...
+            converterLayout = uix.VBox( ...
                 'Parent', obj.converterControls.box, ...
                 'Spacing', 7);
             
-            text = '';
-            led = get(obj.parametersControls.ledPopupMenu, 'Value');
-            if isempty(led)
-                text = 'LED must not be empty';
-            elseif isempty(obj.species)
-                text = 'Species must not be empty';
-            else
-                ndfs = led.getConfigurationSetting('ndfs');
-                gain = led.getConfigurationSetting('gain');
-                if isempty(gain)
-                    text = 'Gain must not be empty';
-                end
-                path = led.getConfigurationSetting('lightPath');
-                if isempty(path)
-                    text = 'Light path must not be empty';
-                end
-                photoreceptors = obj.species.getResource('photoreceptors');
-            end
+            obj.converterControls.fields = containers.Map();            
             
-            if isempty(text)
-                obj.converterControls.fields = containers.Map();
-                
-                keys = [{} {'volts'} photoreceptors.keys];
-                for i = 1:numel(keys)
-                    k = keys{i};
-                    layout = uix.HBox( ...
-                        'Parent', converterLayout, ...
-                        'Spacing', 7);
-                    if i == 1
-                        label = [capitalize(humanize(k)) ':']; 
-                    else
-                        label = [capitalize(humanize(k)) ' R*/s:'];
-                    end
-                    Label( ...
-                        'Parent', layout, ...
-                        'String', label);
-                    obj.converterControls.fields(k) = uicontrol( ...
-                        'Parent', layout, ...
-                        'Style', 'edit', ...
-                        'HorizontalAlignment', 'left');
-                    Button( ...
-                        'Parent', layout, ...
-                        'Icon', symphonyui.app.App.getResource('icons', 'copy.png'), ...
-                        'TooltipString', 'Copy To Clipboard', ...
-                        'Callback', @(h,d)obj.onSelectedCopy(h, struct('key', k)));
-                    set(layout, 'Widths', [70 -1 22]);
-                end
-                set(converterLayout, 'Heights', ones(1, numel(keys))*23);
-            else
+            [tf, msg] = obj.isValid();
+            if ~tf
                 Label( ...
                     'Parent', converterLayout, ...
-                    'String', text, ...
+                    'String', msg, ...
                     'HorizontalAlignment', 'center');
                 set(converterLayout, 'Heights', 23);
+                
+                h = get(obj.mainLayout, 'Heights');
+                set(obj.mainLayout, 'Heights', [h(1) 25+11+23+11]);
+                return;
             end
+            
+            photoreceptors = obj.species.getResource('photoreceptors');
+            keys = [{} {'volts'} photoreceptors.keys];
+            for i = 1:numel(keys)
+                k = keys{i};
+                layout = uix.HBox( ...
+                    'Parent', converterLayout, ...
+                    'Spacing', 7);
+                if i == 1
+                    label = [capitalize(humanize(k)) ':']; 
+                else
+                    label = [capitalize(humanize(k)) ' R*/s:'];
+                end
+                Label( ...
+                    'Parent', layout, ...
+                    'String', label);
+                f.control = uicontrol( ...
+                    'Parent', layout, ...
+                    'Style', 'edit', ...
+                    'HorizontalAlignment', 'left', ...
+                    'KeyPressFcn', @(h,d)obj.onFieldKeyPress(h, struct('fieldName', k)));
+                obj.converterControls.fields(k) = f; 
+                Button( ...
+                    'Parent', layout, ...
+                    'Icon', symphonyui.app.App.getResource('icons', 'copy.png'), ...
+                    'TooltipString', 'Copy To Clipboard', ...
+                    'Callback', @(h,d)obj.onSelectedCopy(h, struct('fieldName', k)));
+                set(layout, 'Widths', [70 -1 22]);
+            end
+            set(converterLayout, 'Heights', ones(1, numel(keys))*23);
             
             h = get(obj.mainLayout, 'Heights');
             set(obj.mainLayout, 'Heights', [h(1) 25+11+layoutHeight(converterLayout)+11]);
         end
         
-        function onSelectedCopy(obj, ~, event)
-            obj.requestFigureFocus();
-            obj.view.update();
-            
-            field = obj.converterControls.fields(event.key);
-            value = get(field, 'String');
-            disp(value);
-            clipboard('copy', value);
+        function [tf, msg] = isValid(obj)
+            msg = '';
+            led = get(obj.parametersControls.ledPopupMenu, 'Value');
+            if isempty(led)
+                msg = 'LED must not be empty';
+            elseif ~any(strcmp('calibrations', led.getResourceNames()))
+                msg = 'LED must be calibrated';
+            elseif ~led.hasConfigurationSetting('ndfs')
+                msg = 'LED is missing ndfs setting';
+            elseif ~led.hasConfigurationSetting('gain')
+                msg = 'LED is missing gain setting';
+            elseif isempty(led.getConfigurationSetting('gain'))
+                msg = 'Gain must not be empty';
+            elseif ~led.hasConfigurationSetting('lightPath')
+                msg = 'LED is missing light path setting';
+            elseif isempty(led.getConfigurationSetting('lightPath'))
+                msg = 'Light path must not be empty';
+            elseif isempty(obj.species)
+                msg = 'Species must not be empty';
+            elseif ~any(strcmp('photoreceptors', obj.species.getResourceNames()))
+                msg = 'Species is missing photoreceptors';
+            end
+            tf = isempty(msg);
         end
         
-        function requestFigureFocus(obj)
-            warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-            javaFrame = get(obj.view.getFigureHandle(), 'JavaFrame');
-            warning('on','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-            javaFrame.getAxisComponent().requestFocus();
+        function onFieldKeyPress(obj, ~, event)
+            field = obj.converterControls.fields(event.fieldName);
+            if ~isfield(field, 'jcontrol')
+                field.jcontrol = findjobj(field.control);
+                obj.converterControls.fields(event.fieldName) = field;
+            end
+            value = char(field.jcontrol.getText());
+            disp(['Typed: ' value]);
+        end
+        
+        function onSelectedCopy(obj, ~, event)
+            field = obj.converterControls.fields(event.fieldName);
+            if ~isfield(field, 'jcontrol')
+                field.jcontrol = findjobj(field.control);
+                obj.converterControls.fields(event.fieldName) = field;
+            end
+            value = char(field.jcontrol.getText());
+            clipboard('copy', value);
+            disp(['Copied: ' value]);
         end
         
         function pack(obj)
@@ -371,7 +392,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             set(f, 'Position', [p(1) p(2)+delta p(3) h]);
         end
         
-        function onLedSetConfigurationSetting(obj, ~, event)
+        function onLedChangedConfigurationSetting(obj, ~, event)
             setting = event.data;
             switch setting.name
                 case 'ndfs'
@@ -381,9 +402,16 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 case 'lightPath'
                     obj.populateLightPath();
             end
-            
             obj.populateConverterBox();
             obj.pack();
+        end
+        
+        function onLedAddedResource(obj, ~, event)
+            resource = event.data;
+            if strcmp(resource.name, 'calibrations')
+                obj.populateConverterBox();
+                obj.pack();
+            end
         end
 
         function onServiceBeganEpochGroup(obj, ~, ~)
