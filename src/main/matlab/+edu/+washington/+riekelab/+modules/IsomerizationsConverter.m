@@ -322,6 +322,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 f.control = uicontrol( ...
                     'Parent', layout, ...
                     'Style', 'edit', ...
+                    'String', '0', ...
                     'HorizontalAlignment', 'left', ...
                     'KeyPressFcn', @(h,d)obj.onFieldKeyPress(h, struct('fieldName', k)));
                 obj.converterControls.fields(k) = f; 
@@ -343,6 +344,10 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             led = get(obj.parametersControls.ledPopupMenu, 'Value');
             if isempty(led)
                 msg = 'LED must not be empty';
+            elseif ~any(strcmp('spectrum', led.getResourceNames()))
+                msg = 'LED is missing spectrum';
+            elseif ~any(strcmp('ndfAttenuations', led.getResourceNames()))
+                msg = 'LED is missing ndf attentuations';
             elseif ~any(strcmp('calibrations', led.getResourceNames()))
                 msg = 'LED must be calibrated';
             elseif ~led.hasConfigurationSetting('ndfs')
@@ -370,7 +375,33 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 obj.converterControls.fields(event.fieldName) = field;
             end
             value = char(field.jcontrol.getText());
-            disp(['Typed: ' value]);
+            
+            led = get(obj.parametersControls.ledPopupMenu, 'Value');
+            spectrum = led.getResource('spectrum');
+            attenuations = led.getResource('ndfAttenuations');
+            calibrations = led.getResource('calibrations');
+            ndfs = led.getConfigurationSetting('ndfs');
+            gain = led.getConfigurationSetting('gain');
+            path = led.getConfigurationSetting('lightPath');
+            photoreceptors = obj.species.getResource('photoreceptors');
+            
+            names = obj.converterControls.fields.keys;
+            names(strcmp(names, event.fieldName)) = [];
+            for i = 1:numel(names)
+                n = names{i};
+                v = edu.washington.riekelab.baudin.modules.IsomerizationsConverterUtilities.SymphonyIsomerizationsConverter( ...
+                    calibrations(gain), ...
+                    spectrum, ...
+                    photoreceptors(n).spectrum, ...
+                    photoreceptors(n).collectingArea, ...
+                    strjoin(ndfs, ';'), ...
+                    attenuations, ...
+                    'voltstoisom', ...
+                    str2double(value));
+                
+                v = round(v);
+                set(obj.converterControls.fields(n).control, 'String', num2str(v));
+            end
         end
         
         function onSelectedCopy(obj, ~, event)
@@ -381,7 +412,6 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
             value = char(field.jcontrol.getText());
             clipboard('copy', value);
-            disp(['Copied: ' value]);
         end
         
         function pack(obj)
@@ -392,21 +422,26 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             set(f, 'Position', [p(1) p(2)+delta p(3) h]);
         end
         
-        function onLedChangedConfigurationSetting(obj, ~, event)
-            setting = event.data;
-            switch setting.name
-                case 'ndfs'
-                    obj.populateNdfs();
-                case 'gain'
-                    obj.populateGain();
-                case 'lightPath'
-                    obj.populateLightPath();
+        function onLedChangedConfigurationSetting(obj, handle, event)
+            if handle ~= get(obj.parametersControls.ledPopupMenu, 'Value')
+                return;
             end
-            obj.populateConverterBox();
-            obj.pack();
+            
+            setting = event.data;
+            if any(strcmp(setting.name, {'ndfs', 'gain', 'lightPath'}))
+                obj.populateNdfs();
+                obj.populateGain();
+                obj.populateLightPath();
+                obj.populateConverterBox();
+                obj.pack();
+            end
         end
         
-        function onLedAddedResource(obj, ~, event)
+        function onLedAddedResource(obj, handle, event)
+            if handle ~= get(obj.parametersControls.ledPopupMenu, 'Value')
+                return;
+            end
+            
             resource = event.data;
             if strcmp(resource.name, 'calibrations')
                 obj.populateConverterBox();
