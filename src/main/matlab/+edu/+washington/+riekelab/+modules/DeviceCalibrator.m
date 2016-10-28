@@ -82,7 +82,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Style', 'edit', ...
                 'Enable', 'off', ...
                 'HorizontalAlignment', 'left');
-            set(lastCalibratedLayout, 'Widths', [110 -1]);
+            set(lastCalibratedLayout, 'Widths', [115 -1]);
             
             useLayout = uix.HBox( ...
                 'Parent', detailLayout);
@@ -105,8 +105,9 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.calibrationCard.calibrationVoltageField = uicontrol( ...
                 'Parent', calibrateLayout, ...
                 'Style', 'edit', ...
+                'String', '1', ...
                 'HorizontalAlignment', 'left');
-            set(calibrateLayout, 'Widths', [110 -1]);
+            set(calibrateLayout, 'Widths', [115 -1]);
             
             ledLayout = uix.HBox( ...
                 'Parent', detailLayout);
@@ -128,7 +129,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Parent', powerLayout, ...
                 'Style', 'edit', ...
                 'HorizontalAlignment', 'left');
-            set(powerLayout, 'Widths', [110 -1]);
+            set(powerLayout, 'Widths', [115 -1]);
             
             spotLayout = uix.HBox( ...
                 'Parent', detailLayout);
@@ -139,7 +140,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Parent', spotLayout, ...
                 'Style', 'edit', ...
                 'HorizontalAlignment', 'left');
-            set(spotLayout, 'Widths', [110 -1]);
+            set(spotLayout, 'Widths', [115 -1]);
             
             submitLayout = uix.HBox( ...
                 'Parent', detailLayout);
@@ -212,8 +213,11 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.calibrations = containers.Map();
             
             obj.populateDeviceList();
-            
-            obj.updateStateOfControls();
+        end
+        
+        function didGo(obj)
+            [device, gain] = obj.getSelectedDevice();
+            obj.selectDevice(device, gain);
         end
         
         function onViewSelectedClose(obj, ~, ~)
@@ -286,8 +290,18 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function selectDevice(obj, device, gain)
+            obj.turnOffAllLeds();
+            
+            turnOn = get(obj.calibrationCard.ledOnButton, 'Value');
+            if turnOn
+                voltage = str2double(get(obj.calibrationCard.calibrationVoltageField, 'String'));
+                isOn = obj.turnOnLed(device, voltage);
+                set(obj.calibrationCard.ledOnButton, 'Value', isOn);
+            end
+            
             obj.setSelectedDevice(device, gain);
             obj.populateDetailsForDevice(device, gain);
+            obj.updateStateOfControls();
         end
         
         function selectNextDevice(obj)
@@ -308,19 +322,48 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         
         function [device, gain] = getSelectedDevice(obj)
             v = get(obj.calibrationCard.deviceListBox, 'Value');
+            if isempty(v)
+                device = [];
+                gain = [];
+                return;
+            end
             v = v{1};
             device = v.device;
             gain = v.gain;
         end
         
         function populateDetailsForDevice(obj, device, gain)
-            
+            if isempty(device)
+                n = '';
+            else
+                n = device.name;
+                if ~strcmp(gain, 'none')
+                    n = [n ' - ' gain];
+                end
+            end
+            set(obj.calibrationCard.lastCalibratedField, 'String', n);
         end
         
         function onSelectedUse(obj, ~, ~)
             [device, gain] = obj.getSelectedDevice();
+            if obj.isDeviceCalibrated(device, gain)
+                result = obj.view.showMessage( ...
+                    'This device has already been calibrated. Are you sure you want overwrite the current value?', 'Overwrite', ...
+                    'button1', 'Cancel', ...
+                    'button2', 'Overwrite');
+                if ~strcmp(result, 'Overwrite')
+                    return;
+                end
+            end
             
             value = rand();
+            obj.calibrateDevice(device, gain, value);
+            
+            obj.selectNextDevice();
+            obj.updateStateOfControls();
+        end
+        
+        function calibrateDevice(obj, device, gain, value)
             if obj.calibrations.isKey(device.name)
                 m = obj.calibrations(device.name);
             else
@@ -328,10 +371,11 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             m(gain) = value;
             obj.calibrations(device.name) = m;
-            
             obj.setDeviceCalibrated(device, gain);
-            obj.selectNextDevice();
-            obj.updateStateOfControls();
+        end
+        
+        function tf = isDeviceCalibrated(obj, device, gain)
+            tf = obj.calibrations.isKey(device.name) && obj.calibrations(device.name).isKey(gain);
         end
         
         function setDeviceCalibrated(obj, device, gain)
@@ -349,31 +393,56 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(obj.calibrationCard.deviceListBox, 'Values', values);
         end
         
-        function tf = isDeviceCalibrated(obj, device, gain)
-            names = get(obj.calibrationCard.deviceListBox, 'String');
-            values = get(obj.calibrationCard.deviceListBox, 'Values');
+        function onSelectedLedOn(obj, ~, ~)
+            obj.turnOffAllLeds();
             
-            i = cellfun(@(v)isequal(v, struct('device', device, 'gain', gain)), values);
-            tf = strncmpi(names{i}, '<html><font color="green"><b>', 29);
+            turnOn = get(obj.calibrationCard.ledOnButton, 'Value');
+            if turnOn
+                led = obj.getSelectedDevice();
+                voltage = str2double(get(obj.calibrationCard.calibrationVoltageField, 'String'));
+                isOn = obj.turnOnLed(led, voltage);
+                set(obj.calibrationCard.ledOnButton, 'Value', isOn);
+            end
+            
+            obj.updateStateOfControls();
         end
         
-        function onSelectedLedOn(obj, ~, ~)
-            obj.updateStateOfControls();
+        function success = turnOnLed(obj, led, voltage)
+            success = true;
+            try
+                led.background = symphonyui.core.Measurement(voltage, 'V');
+                led.applyBackground();
+            catch x
+                obj.view.showError(['Unable to turn on LED: ' x.message]);
+                led.background = symphonyui.core.Measurement(0, 'V');
+                success = false;
+                return;
+            end
+        end
+        
+        function turnOffAllLeds(obj)
+            for i = 1:numel(obj.leds)
+                led = obj.leds{i};
+                led.background = symphonyui.core.Measurement(0, led.background.displayUnits);
+                led.applyBackground();
+            end
         end
         
         function onSelectedSubmit(obj, ~, ~)
             [device, gain] = obj.getSelectedDevice();
+            if obj.isDeviceCalibrated(device, gain)
+                result = obj.view.showMessage( ...
+                    'This device has already been calibrated. Are you sure you want overwrite the current value?', 'Overwrite', ...
+                    'button1', 'Cancel', ...
+                    'button2', 'Overwrite');
+                if ~strcmp(result, 'Overwrite')
+                    return;
+                end
+            end
             
             value = rand();
-            if obj.calibrations.isKey(device.name)
-                m = obj.calibrations(device.name);
-            else
-                m = containers.Map();
-            end
-            m(gain) = value;
-            obj.calibrations(device.name) = m;
+            obj.calibrateDevice(device, gain, value);
             
-            obj.setDeviceCalibrated(device, gain);
             obj.selectNextDevice();
             obj.updateStateOfControls();
         end
@@ -391,31 +460,16 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 set(obj.wizardCardPanel, 'Selection', selection + 1);
             end
             
-            obj.updateStateOfControls();
+            if strcmp(get(obj.nextButton, 'String'), 'Finish')
+                obj.turnOffAllLeds();
+                obj.stop();
+            else
+                obj.updateStateOfControls();
+            end
         end
         
         function onSelectedCancel(obj, ~, ~)
             obj.close();
-        end
-        
-        function updateStateOfControls(obj)
-            import appbox.*;
-            
-            isLedOn = get(obj.calibrationCard.ledOnButton, 'Value');
-            isLastCard = get(obj.wizardCardPanel, 'Selection') >= numel(get(obj.wizardCardPanel, 'Children'));
-            allCalibrated = all(cellfun(@(s)obj.isDeviceCalibrated(s.device, s.gain), get(obj.calibrationCard.deviceListBox, 'Values')));
-            
-            set(obj.calibrationCard.calibrationVoltageField, 'Enable', onOff(~isLedOn));
-            set(obj.calibrationCard.powerReadingField, 'Enable', onOff(isLedOn));
-            set(obj.calibrationCard.spotDiameterField, 'Enable', onOff(isLedOn));
-            set(obj.calibrationCard.submitButton, 'Enable', onOff(isLedOn));
-            set(obj.backButton, 'Enable', onOff(isLastCard));
-            set(obj.nextButton, 'Enable', onOff(~isLastCard || allCalibrated));
-            if isLastCard
-                set(obj.nextButton, 'String', 'Finish');
-            else
-                set(obj.nextButton, 'String', 'Next >');
-            end
         end
         
         function close(obj)
@@ -429,7 +483,31 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 shouldClose = strcmp(result, 'Close');
             end
             if shouldClose
+                obj.turnOffAllLeds();
                 obj.stop();
+            end
+        end
+        
+        function updateStateOfControls(obj)
+            import appbox.*;
+            
+            hasDevice = ~isempty(get(obj.calibrationCard.deviceListBox, 'Value'));
+            isLedOn = get(obj.calibrationCard.ledOnButton, 'Value');
+            isLastCard = get(obj.wizardCardPanel, 'Selection') >= numel(get(obj.wizardCardPanel, 'Children'));
+            allCalibrated = all(cellfun(@(s)obj.isDeviceCalibrated(s.device, s.gain), get(obj.calibrationCard.deviceListBox, 'Values')));
+            
+            set(obj.calibrationCard.useButton, 'Enable', onOff(hasDevice));
+            set(obj.calibrationCard.calibrationVoltageField, 'Enable', onOff(hasDevice && ~isLedOn));
+            set(obj.calibrationCard.ledOnButton, 'Enable', onOff(hasDevice));
+            set(obj.calibrationCard.powerReadingField, 'Enable', onOff(hasDevice && isLedOn));
+            set(obj.calibrationCard.spotDiameterField, 'Enable', onOff(hasDevice && isLedOn));
+            set(obj.calibrationCard.submitButton, 'Enable', onOff(hasDevice && isLedOn));
+            set(obj.backButton, 'Enable', onOff(isLastCard));
+            set(obj.nextButton, 'Enable', onOff(~isLastCard || allCalibrated));
+            if isLastCard
+                set(obj.nextButton, 'String', 'Finish');
+            else
+                set(obj.nextButton, 'String', 'Next >');
             end
         end
         
