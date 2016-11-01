@@ -215,11 +215,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.populateDeviceList();
         end
         
-        function didGo(obj)
-            [device, gain] = obj.getSelectedDevice();
-            obj.selectDevice(device, gain);
-        end
-        
         function onViewSelectedClose(obj, ~, ~)
             obj.close();
         end
@@ -464,7 +459,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 obj.turnOffAllLeds();
                 obj.stop();
             else
-                obj.updateStateOfControls();
+                [device, gain] = obj.getSelectedDevice();
+                obj.selectDevice(device, gain);
             end
         end
         
@@ -483,7 +479,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 shouldClose = strcmp(result, 'Close');
             end
             if shouldClose
-                obj.turnOffAllLeds();
                 obj.stop();
             end
         end
