@@ -24,7 +24,7 @@ classdef TwoPhoton < symphonyui.core.descriptions.RigDescription
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
             red.addConfigurationSetting('lightPath', '', ...
                 'type', PropertyType('char', 'row', {'', 'above', 'below'}));
-            red.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'two_photon', 'red_led_spectrum.txt')));
+            red.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'two_photon', 'red_led_spectrum.txt')));
             obj.addDevice(red);
             
             uv = UnitConvertingDevice('UV LED', 'V').bindStream(daq.getStream('ao2'));
@@ -37,7 +37,7 @@ classdef TwoPhoton < symphonyui.core.descriptions.RigDescription
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
             uv.addConfigurationSetting('lightPath', '', ...
                 'type', PropertyType('char', 'row', {'', 'above', 'below'}));
-            uv.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'two_photon', 'uv_led_spectrum.txt')));
+            uv.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'two_photon', 'uv_led_spectrum.txt')));
             obj.addDevice(uv);
             
             blue = UnitConvertingDevice('Blue LED', 'V').bindStream(daq.getStream('ao3'));
@@ -50,7 +50,7 @@ classdef TwoPhoton < symphonyui.core.descriptions.RigDescription
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
             blue.addConfigurationSetting('lightPath', '', ...
                 'type', PropertyType('char', 'row', {'', 'above', 'below'}));
-            blue.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'two_photon', 'blue_led_spectrum.txt')));
+            blue.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'two_photon', 'blue_led_spectrum.txt')));
             obj.addDevice(blue);
             
             temperature = UnitConvertingDevice('Temperature Controller', 'V', 'manufacturer', 'Warner Instruments').bindStream(daq.getStream('ai6'));
