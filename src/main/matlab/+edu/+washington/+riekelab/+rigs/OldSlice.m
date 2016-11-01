@@ -24,7 +24,7 @@ classdef OldSlice < symphonyui.core.descriptions.RigDescription
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
             red.addConfigurationSetting('lightPath', '', ...
                 'type', PropertyType('char', 'row', {'', 'above', 'below'}));
-            red.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'old_slice', 'red_led_spectrum.txt')));            
+            red.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'red_led_spectrum.txt')));            
             obj.addDevice(red);
             
             green = UnitConvertingDevice('Green LED', 'V').bindStream(daq.getStream('ao2'));
@@ -37,7 +37,7 @@ classdef OldSlice < symphonyui.core.descriptions.RigDescription
                 'type', PropertyType('char', 'row', {'', 'low', 'medium', 'high'}));
             green.addConfigurationSetting('lightPath', '', ...
                 'type', PropertyType('char', 'row', {'', 'above', 'below'}));
-            green.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'old_slice', 'green_led_spectrum.txt')));                       
+            green.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'green_led_spectrum.txt')));                       
             obj.addDevice(green);
             
             uv = UnitConvertingDevice('UV LED', 'V').bindStream(daq.getStream('ao3'));
@@ -50,7 +50,7 @@ classdef OldSlice < symphonyui.core.descriptions.RigDescription
                 'type', PropertyType('char', 'row', {'', 'medium', 'high'}));
             uv.addConfigurationSetting('lightPath', '', ...
                 'type', PropertyType('char', 'row', {'', 'above', 'below'}));
-            uv.addResource('spectrum', importdata(riekelab.Package.getResource('calibration', 'old_slice', 'uv_led_spectrum.txt')));          
+            uv.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'uv_led_spectrum.txt')));          
             obj.addDevice(uv);
             
             temperature = UnitConvertingDevice('Temperature Controller', 'V', 'manufacturer', 'Warner Instruments').bindStream(daq.getStream('ai6'));
