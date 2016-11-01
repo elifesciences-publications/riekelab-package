@@ -341,15 +341,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         
         function onSelectedUse(obj, ~, ~)
             [device, gain] = obj.getSelectedDevice();
-            if obj.isDeviceCalibrated(device, gain)
-                result = obj.view.showMessage( ...
-                    'This device has already been calibrated. Are you sure you want overwrite the current value?', 'Overwrite', ...
-                    'button1', 'Cancel', ...
-                    'button2', 'Overwrite');
-                if ~strcmp(result, 'Overwrite')
-                    return;
-                end
-            end
             
             value = rand();
             obj.calibrateDevice(device, gain, value);
@@ -359,6 +350,17 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function calibrateDevice(obj, device, gain, value)
+            if obj.isDeviceCalibrated(device, gain)
+                result = obj.view.showMessage( ...
+                    'This device has already been calibrated. Are you sure you want overwrite the current value?', ...
+                    'Overwrite', ...
+                    'button1', 'Cancel', ...
+                    'button2', 'Overwrite');
+                if ~strcmp(result, 'Overwrite')
+                    return;
+                end
+            end
+            
             if obj.calibrations.isKey(device.name)
                 m = obj.calibrations(device.name);
             else
@@ -425,17 +427,19 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         
         function onSelectedSubmit(obj, ~, ~)
             [device, gain] = obj.getSelectedDevice();
-            if obj.isDeviceCalibrated(device, gain)
-                result = obj.view.showMessage( ...
-                    'This device has already been calibrated. Are you sure you want overwrite the current value?', 'Overwrite', ...
-                    'button1', 'Cancel', ...
-                    'button2', 'Overwrite');
-                if ~strcmp(result, 'Overwrite')
-                    return;
-                end
+            
+            voltage = str2double(get(obj.calibrationCard.calibrationVoltageField, 'String'));            
+            power = str2double(get(obj.calibrationCard.powerReadingField, 'String'));
+            diameter = str2double(get(obj.calibrationCard.spotDiameterField, 'String'));
+            
+            if isnan(power) || isnan(diameter)
+                obj.view.showError('Could not parse power or diameter to a valid scalar value.');
+                return;
             end
             
-            value = rand();
+            ssize = pi * diameter * diameter / 4;
+            value = power / (ssize * voltage);
+            
             obj.calibrateDevice(device, gain, value);
             
             obj.selectNextDevice();
@@ -489,7 +493,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             hasDevice = ~isempty(get(obj.calibrationCard.deviceListBox, 'Value'));
             isLedOn = get(obj.calibrationCard.ledOnButton, 'Value');
             isLastCard = get(obj.wizardCardPanel, 'Selection') >= numel(get(obj.wizardCardPanel, 'Children'));
-            allCalibrated = all(cellfun(@(s)obj.isDeviceCalibrated(s.device, s.gain), get(obj.calibrationCard.deviceListBox, 'Values')));
+            allCalibrated = all(cellfun(@(s)obj.isDeviceCalibrated(s.device, s.gain), ...
+                get(obj.calibrationCard.deviceListBox, 'Values')));
             
             set(obj.calibrationCard.useButton, 'Enable', onOff(hasDevice));
             set(obj.calibrationCard.calibrationVoltageField, 'Enable', onOff(hasDevice && ~isLedOn));
