@@ -212,7 +212,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             
             obj.calibrations = containers.Map();
-            
             obj.previousCalibrations = containers.Map();
             for i = 1:numel(obj.leds)
                 led = obj.leds{i};
@@ -235,6 +234,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             
             obj.populateDeviceList();
+            obj.updateStateOfControls();
         end
         
         function onViewSelectedClose(obj, ~, ~)
@@ -285,16 +285,20 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             names = {};
             values = {};
             for i = 1:numel(keys)
-                key = keys{i};
-                devs = devices(key);
+                gain = keys{i};
+                devs = devices(gain);
                 for k = 1:numel(devs)
                     d = devs{k};
-                    n = d.name;
-                    if ~strcmp(key, 'none')
-                        n = [n ' - ' key]; %#ok<AGROW>
+                    if obj.isDeviceCalibrated(d, gain)
+                        n = ['<html><font color="green"><b>' d.name];
+                    else
+                        n = d.name;
+                    end
+                    if ~strcmp(gain, 'none')
+                        n = [n ' - ' gain]; %#ok<AGROW>
                     end
                     names{end + 1} = n; %#ok<AGROW>
-                    values{end + 1} = struct('device', d, 'gain', key); %#ok<AGROW>
+                    values{end + 1} = struct('device', d, 'gain', gain); %#ok<AGROW>
                 end
             end
             set(obj.calibrationCard.deviceListBox, 'String', names);
@@ -403,7 +407,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function tf = isDeviceCalibrated(obj, device, gain)
-            tf = obj.calibrations.isKey(device.name) && obj.calibrations(device.name).isKey(gain);
+            tf = any(strcmp('calibrations', device.getResourceNames())) || ...
+                (obj.calibrations.isKey(device.name) && obj.calibrations(device.name).isKey(gain));
         end
         
         function setDeviceCalibrated(obj, device, gain)
