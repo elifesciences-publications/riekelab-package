@@ -216,21 +216,22 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             for i = 1:numel(obj.leds)
                 led = obj.leds{i};
                 
-                if ~led.hasConfigurationSetting('fluxFactorPaths')
+                if ~any(strcmp('fluxFactorPaths', led.getResourceNames()))
                     continue;
                 end
-                paths = led.getConfigurationSetting('fluxFactorPaths');
+                paths = led.getResource('fluxFactorPaths');
                 
                 m = containers.Map();
-                keys = paths.keys;
-                for k = 1:numel(keys)
-                    if ~exist(path, 'file')
+                gains = paths.keys;
+                for k = 1:numel(gains)
+                    gain = gains{k};
+                    if ~exist(paths(gain), 'file')
                         continue;
                     end
-                    m(keys{k}) = importdata(paths(keys{k}));
+                    m(gain) = importdata(paths(gain));
                 end
                 
-                obj.previousCalibrations(device.name) = m;
+                obj.previousCalibrations(led.name) = m;
             end
             
             obj.populateDeviceList();
@@ -358,7 +359,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             if isempty(date)
                 lastCalibrated = 'Never';
             else
-                lastCalibrated = datestr(date);
+                lastCalibrated = datestr(date, 'dd-mmm-yyyy HH:MM:SS PM');
             end
             set(obj.calibrationCard.lastCalibratedField, 'String', lastCalibrated);
         end
@@ -377,7 +378,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         function onSelectedUse(obj, ~, ~)
             [device, gain] = obj.getSelectedDevice();
             
-            value = rand();
+            value = obj.getLastCalibrationValue(device, gain);
             obj.calibrateDevice(device, gain, value);
             
             obj.selectNextDevice();
@@ -440,14 +441,14 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.updateStateOfControls();
         end
         
-        function success = turnOnLed(obj, led, voltage)
+        function success = turnOnLed(obj, led, quantity)
             success = true;
             try
-                led.background = symphonyui.core.Measurement(voltage, 'V');
+                led.background = symphonyui.core.Measurement(quantity, led.background.displayUnits);
                 led.applyBackground();
             catch x
                 obj.view.showError(['Unable to turn on LED: ' x.message]);
-                led.background = symphonyui.core.Measurement(0, 'V');
+                led.background = symphonyui.core.Measurement(0, led.background.displayUnits);
                 success = false;
                 return;
             end
@@ -475,7 +476,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             
             ssize = pi * diameter * diameter / 4;
             value = power / (ssize * voltage);
-            
             obj.calibrateDevice(device, gain, value);
             
             obj.selectNextDevice();
@@ -508,13 +508,43 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         function saveCalibration(obj)
             keys = obj.calibrations.keys;
             for i = 1:numel(keys)
-                key = keys{i};
-                led = obj.leds{cellfun(@(l)strcmp(l.name, key), obj.leds)};
+                name = keys{i};
+                led = obj.leds{cellfun(@(l)strcmp(l.name, name), obj.leds)};
                 
                 if any(strcmp('calibrations', led.getResourceNames()))
                     led.removeResource('calibrations');
                 end
-                led.addResource('calibrations', obj.calibrations(key));
+                if ~obj.calibrations.isKey(name)
+                    continue;
+                end
+                cal = obj.calibrations(name);
+                led.addResource('calibrations', cal);
+                
+                if ~obj.previousCalibrations.isKey(name)
+                    continue;
+                end
+                prevCal = obj.previousCalibrations(name);
+                
+                if ~any(strcmp('fluxFactorPaths', led.getResourceNames()))
+                    continue;
+                end
+                paths = led.getResource('fluxFactorPaths');
+                
+                gains = cal.keys;
+                for k = 1:numel(gains)
+                    gain = gains{k};
+                    if prevCal.isKey(gain)
+                        history = prevCal(gain);
+                    else
+                        history = [];
+                    end
+                    history(end + 1, 1) = now(); %#ok<AGROW>
+                    history(end, 2) = cal(gain);
+                    save(paths(gain), 'history', '-ascii', '-double', '-tabs');
+                    prevCal(gain) = history;
+                end
+                
+                obj.previousCalibrations(name) = prevCal;
             end
         end
         
