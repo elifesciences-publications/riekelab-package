@@ -4,6 +4,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         leds
         stage
         calibrations
+        previousCalibrations
     end
     
     properties (Access = private)
@@ -212,6 +213,27 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             
             obj.calibrations = containers.Map();
             
+            obj.previousCalibrations = containers.Map();
+            for i = 1:numel(obj.leds)
+                led = obj.leds{i};
+                
+                if ~led.hasConfigurationSetting('fluxFactorPaths')
+                    continue;
+                end
+                paths = led.getConfigurationSetting('fluxFactorPaths');
+                
+                m = containers.Map();
+                keys = paths.keys;
+                for k = 1:numel(keys)
+                    if ~exist(path, 'file')
+                        continue;
+                    end
+                    m(keys{k}) = importdata(paths(keys{k}));
+                end
+                
+                obj.previousCalibrations(device.name) = m;
+            end
+            
             obj.populateDeviceList();
         end
         
@@ -328,15 +350,24 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function populateDetailsForDevice(obj, device, gain)
-            if isempty(device)
-                n = '';
+            [~, date] = obj.getLastCalibrationValue(device, gain);
+            if isempty(date)
+                lastCalibrated = 'Never';
             else
-                n = device.name;
-                if ~strcmp(gain, 'none')
-                    n = [n ' - ' gain];
-                end
+                lastCalibrated = datestr(date);
             end
-            set(obj.calibrationCard.lastCalibratedField, 'String', n);
+            set(obj.calibrationCard.lastCalibratedField, 'String', lastCalibrated);
+        end
+        
+        function [v, d] = getLastCalibrationValue(obj, device, gain)
+            v = [];
+            d = [];
+            if obj.previousCalibrations.isKey(device.name) && obj.previousCalibrations(device.name).isKey(gain)
+                m = obj.previousCalibrations(device.name);
+                factors = m(gain);
+                v = factors(end, 2);
+                d = factors(end, 1);
+            end
         end
         
         function onSelectedUse(obj, ~, ~)
@@ -460,11 +491,25 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             
             if strcmp(get(obj.nextButton, 'String'), 'Finish')
+                obj.saveCalibration();
                 obj.turnOffAllLeds();
                 obj.stop();
             else
                 [device, gain] = obj.getSelectedDevice();
                 obj.selectDevice(device, gain);
+            end
+        end
+        
+        function saveCalibration(obj)
+            keys = obj.calibrations.keys;
+            for i = 1:numel(keys)
+                key = keys{i};
+                led = obj.leds{cellfun(@(l)strcmp(l.name, key), obj.leds)};
+                
+                if any(strcmp('calibrations', led.getResourceNames()))
+                    led.removeResource('calibrations');
+                end
+                led.addResource('calibrations', obj.calibrations(key));
             end
         end
         
@@ -490,13 +535,16 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         function updateStateOfControls(obj)
             import appbox.*;
             
-            hasDevice = ~isempty(get(obj.calibrationCard.deviceListBox, 'Value'));
+            [device, gain] = obj.getSelectedDevice();
+            
+            hasDevice = ~isempty(device);
+            hasLastCalibration = hasDevice && ~isempty(obj.getLastCalibrationValue(device, gain));
             isLedOn = get(obj.calibrationCard.ledOnButton, 'Value');
             isLastCard = get(obj.wizardCardPanel, 'Selection') >= numel(get(obj.wizardCardPanel, 'Children'));
             allCalibrated = all(cellfun(@(s)obj.isDeviceCalibrated(s.device, s.gain), ...
                 get(obj.calibrationCard.deviceListBox, 'Values')));
             
-            set(obj.calibrationCard.useButton, 'Enable', onOff(hasDevice));
+            set(obj.calibrationCard.useButton, 'Enable', onOff(hasLastCalibration));
             set(obj.calibrationCard.calibrationVoltageField, 'Enable', onOff(hasDevice && ~isLedOn));
             set(obj.calibrationCard.ledOnButton, 'Enable', onOff(hasDevice));
             set(obj.calibrationCard.powerReadingField, 'Enable', onOff(hasDevice && isLedOn));
