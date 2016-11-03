@@ -73,17 +73,16 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Parent', calibrationLayout, ...
                 'Spacing', 7);
             
-            lastCalibratedLayout = uix.HBox( ...
+            useCalibrationLayout = uix.HBox( ...
                 'Parent', detailLayout);
             Label( ...
-                'Parent', lastCalibratedLayout, ...
-                'String', 'Last calibrated:');
-            obj.calibrationCard.lastCalibratedField = uicontrol( ...
-                'Parent', lastCalibratedLayout, ...
-                'Style', 'edit', ...
-                'Enable', 'off', ...
+                'Parent', useCalibrationLayout, ...
+                'String', 'Use calibration:');
+            obj.calibrationCard.useCalibrationPopupMenu = MappedPopupMenu( ...
+                'Parent', useCalibrationLayout, ...
+                'String', {' '}, ...
                 'HorizontalAlignment', 'left');
-            set(lastCalibratedLayout, 'Widths', [115 -1]);
+            set(useCalibrationLayout, 'Widths', [90 -1]);
             
             useLayout = uix.HBox( ...
                 'Parent', detailLayout);
@@ -99,16 +98,22 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             javacomponent(com.jidesoft.swing.TitledSeparator('Or', com.jidesoft.swing.TitledSeparator.TYPE_PARTIAL_LINE, javax.swing.SwingConstants.CENTER), [], detailLayout);
             
             calibrateLayout = uix.HBox( ...
-                'Parent', detailLayout);
+                'Parent', detailLayout, ...
+                'Spacing', 5);
             Label( ...
                 'Parent', calibrateLayout, ...
-                'String', 'Calibrate using (V):');
-            obj.calibrationCard.calibrationVoltageField = uicontrol( ...
+                'String', 'Calibrate using:');
+            obj.calibrationCard.calibrationQuantityField = uicontrol( ...
                 'Parent', calibrateLayout, ...
                 'Style', 'edit', ...
                 'String', '1', ...
                 'HorizontalAlignment', 'left');
-            set(calibrateLayout, 'Widths', [115 -1]);
+            obj.calibrationCard.calibrationUnitsField = uicontrol( ...
+                'Parent', calibrateLayout, ...
+                'Style', 'edit', ...
+                'Enable', 'off', ...
+                'HorizontalAlignment', 'left');
+            set(calibrateLayout, 'Widths', [85 -1 -1]);
             
             ledLayout = uix.HBox( ...
                 'Parent', detailLayout);
@@ -122,26 +127,38 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(ledLayout, 'Widths', [-1 75]);
             
             powerLayout = uix.HBox( ...
-                'Parent', detailLayout); 
+                'Parent', detailLayout, ...
+                'Spacing', 5); 
             Label( ...
                 'Parent', powerLayout, ...
-                'String', 'Power reading (nW):');
+                'String', 'Power reading:');
             obj.calibrationCard.powerReadingField = uicontrol( ...
                 'Parent', powerLayout, ...
                 'Style', 'edit', ...
                 'HorizontalAlignment', 'left');
-            set(powerLayout, 'Widths', [115 -1]);
+            obj.calibrationCard.powerUnitsField = uicontrol( ...
+                'Parent', powerLayout, ...
+                'Style', 'edit', ...
+                'Enable', 'off', ...
+                'HorizontalAlignment', 'left');
+            set(powerLayout, 'Widths', [85 -1 -1]);
             
             spotLayout = uix.HBox( ...
-                'Parent', detailLayout);
+                'Parent', detailLayout, ...
+                'Spacing', 5);
             Label( ...
                 'Parent', spotLayout, ...
-                'String', 'Spot diameter (um):');
+                'String', 'Spot diameter:');
             obj.calibrationCard.spotDiameterField = uicontrol( ...
                 'Parent', spotLayout, ...
                 'Style', 'edit', ...
                 'HorizontalAlignment', 'left');
-            set(spotLayout, 'Widths', [115 -1]);
+            obj.calibrationCard.spotUnitsField = uicontrol( ...
+                'Parent', spotLayout, ...
+                'Style', 'edit', ...
+                'Enable', 'off', ...
+                'HorizontalAlignment', 'left');
+            set(spotLayout, 'Widths', [85 -1 -1]);
             
             submitLayout = uix.HBox( ...
                 'Parent', detailLayout);
@@ -316,8 +333,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             
             turnOn = get(obj.calibrationCard.ledOnButton, 'Value');
             if turnOn
-                voltage = str2double(get(obj.calibrationCard.calibrationVoltageField, 'String'));
-                isOn = obj.turnOnLed(device, voltage);
+                quantity = str2double(get(obj.calibrationCard.calibrationQuantityField, 'String'));
+                isOn = obj.turnOnLed(device, quantity);
                 set(obj.calibrationCard.ledOnButton, 'Value', isOn);
             end
             
@@ -355,13 +372,32 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function populateDetailsForDevice(obj, device, gain)
-            [~, date] = obj.getLastCalibrationValue(device, gain);
-            if isempty(date)
-                lastCalibrated = 'Never';
+            [values, dates] = obj.getPreviousCalibrationValues(device, gain);
+            if isempty(dates)
+                names = {'(None)'};
+                values = {[]};
             else
-                lastCalibrated = datestr(date, 'dd-mmm-yyyy HH:MM:SS PM');
+                names = arrayfun(@(d)datestr(d, 'dd-mmm-yyyy HH:MM:SS PM'), dates, 'UniformOutput', false);
             end
-            set(obj.calibrationCard.lastCalibratedField, 'String', lastCalibrated);
+            set(obj.calibrationCard.useCalibrationPopupMenu, 'String', names);
+            set(obj.calibrationCard.useCalibrationPopupMenu, 'Values', values);
+            
+            set(obj.calibrationCard.calibrationUnitsField, 'String', device.background.displayUnits);
+            
+            set(obj.calibrationCard.powerUnitsField, 'String', 'nW');
+            set(obj.calibrationCard.spotUnitsField, 'String', 'um');
+        end
+        
+        function [v, d, n] = getPreviousCalibrationValues(obj, device, gain)
+            v = [];
+            d = [];
+            if obj.previousCalibrations.isKey(device.name) && obj.previousCalibrations(device.name).isKey(gain)
+                m = obj.previousCalibrations(device.name);
+                factors = m(gain);
+                v = fliplr(factors(:, 2));
+                d = fliplr(factors(:, 1));
+                n = [];
+            end
         end
         
         function [v, d] = getLastCalibrationValue(obj, device, gain)
@@ -433,8 +469,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             turnOn = get(obj.calibrationCard.ledOnButton, 'Value');
             if turnOn
                 led = obj.getSelectedDevice();
-                voltage = str2double(get(obj.calibrationCard.calibrationVoltageField, 'String'));
-                isOn = obj.turnOnLed(led, voltage);
+                quantity = str2double(get(obj.calibrationCard.calibrationQuantityField, 'String'));
+                isOn = obj.turnOnLed(led, quantity);
                 set(obj.calibrationCard.ledOnButton, 'Value', isOn);
             end
             
@@ -465,7 +501,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         function onSelectedSubmit(obj, ~, ~)
             [device, gain] = obj.getSelectedDevice();
             
-            voltage = str2double(get(obj.calibrationCard.calibrationVoltageField, 'String'));            
+            quantity = str2double(get(obj.calibrationCard.calibrationQuantityField, 'String'));            
             power = str2double(get(obj.calibrationCard.powerReadingField, 'String'));
             diameter = str2double(get(obj.calibrationCard.spotDiameterField, 'String'));
             
@@ -475,7 +511,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             
             ssize = pi * diameter * diameter / 4;
-            value = power / (ssize * voltage);
+            value = power / (ssize * quantity);
             obj.calibrateDevice(device, gain, value);
             
             obj.selectNextDevice();
@@ -573,14 +609,15 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             [device, gain] = obj.getSelectedDevice();
             
             hasDevice = ~isempty(device);
-            hasLastCalibration = hasDevice && ~isempty(obj.getLastCalibrationValue(device, gain));
+            hasAnyPreviousCalibrations = obj.previousCalibrations.isKey(device.name) && obj.previousCalibrations(device.name).isKey(gain);
             isLedOn = get(obj.calibrationCard.ledOnButton, 'Value');
             isLastCard = get(obj.wizardCardPanel, 'Selection') >= numel(get(obj.wizardCardPanel, 'Children'));
             allCalibrated = all(cellfun(@(s)obj.isDeviceCalibrated(s.device, s.gain), ...
                 get(obj.calibrationCard.deviceListBox, 'Values')));
             
-            set(obj.calibrationCard.useButton, 'Enable', onOff(hasLastCalibration));
-            set(obj.calibrationCard.calibrationVoltageField, 'Enable', onOff(hasDevice && ~isLedOn));
+            set(obj.calibrationCard.useCalibrationPopupMenu, 'Enable', onOff(hasAnyPreviousCalibrations));
+            set(obj.calibrationCard.useButton, 'Enable', onOff(hasAnyPreviousCalibrations));
+            set(obj.calibrationCard.calibrationQuantityField, 'Enable', onOff(hasDevice && ~isLedOn));
             set(obj.calibrationCard.ledOnButton, 'Enable', onOff(hasDevice));
             set(obj.calibrationCard.powerReadingField, 'Enable', onOff(hasDevice && isLedOn));
             set(obj.calibrationCard.spotDiameterField, 'Enable', onOff(hasDevice && isLedOn));
