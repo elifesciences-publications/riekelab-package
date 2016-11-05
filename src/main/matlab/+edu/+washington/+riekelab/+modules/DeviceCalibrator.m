@@ -528,7 +528,11 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(obj.calibrationCard.ledCard.useCalibrationPopupMenu, 'Values', values);
             set(obj.calibrationCard.ledCard.useCalibrationPopupMenu, 'Enable', appbox.onOff(~isempty(table)));
             set(obj.calibrationCard.ledCard.useButton, 'Enable', appbox.onOff(~isempty(table)));
-            set(obj.calibrationCard.ledCard.calibrationUnitsField, 'String', led.background.displayUnits);
+            if isempty(led)
+                set(obj.calibrationCard.ledCard.calibrationUnitsField, 'String', '');
+            else
+                set(obj.calibrationCard.ledCard.calibrationUnitsField, 'String', led.background.displayUnits);
+            end
             
             set(obj.calibrationCard.detailCardPanel, 'Selection', 1);
         end
@@ -557,7 +561,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         
         function t = getPreviousCalibrationTable(obj, device, setting)
             t = [];
-            if obj.previousCalibrations.isKey(device.name) && obj.previousCalibrations(device.name).isKey(setting)
+            if ~isempty(device) && obj.previousCalibrations.isKey(device.name) && obj.previousCalibrations(device.name).isKey(setting)
                 m = obj.previousCalibrations(device.name);
                 t = m(setting);
             end
@@ -732,7 +736,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function turnOffStage(obj, force)
-            if ~obj.isStageOn && ~force
+            if isempty(obj.stage) || (~obj.isStageOn && ~force)
                 return;
             end
             obj.stage.play(stage.core.Presentation(1/obj.stage.getMonitorRefreshRate())); %#ok<PROPLC>
