@@ -25,7 +25,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             
             set(figureHandle, ...
                 'Name', 'Device Calibrator', ...
-                'Position', screenCenter(475, 294), ...
+                'Position', screenCenter(475, 324), ...
                 'WindowStyle', 'modal', ...
                 'Resize', 'off');
             
@@ -45,18 +45,20 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             Label( ...
                 'Parent', instructionsLayout, ...
                 'String', sprintf(['<html><b>Instructions:</b><br>' ...
-                    '&emsp;1. Tape the wand to the stage, face down.<br>' ...
-                    '&emsp;2. Connect the wand BNC cable to the light meter input on front of the box.<br>' ...
-                    '&emsp;3. Close the curtains and dim the lights.<br>' ...
-                    '&emsp;4. Turn on the power meter and set the gain to 10^-3.<br>' ...
-                    '&emsp;5. Make sure the current (background) reading is ~0.01 or lower.<br>' ...
-                    '&emsp;6. Turn on the stimulation device to a reasonably bright setting.<br>' ...
-                    '&emsp;7. Center and focus the wand relative to the spot:<br>' ...
-                    '&emsp;&emsp;7.1. Move the stage in the X direction until you find the peak power reading.<br>' ...
-                    '&emsp;&emsp;7.2. Move the stage in the Y direction until you find the peak power reading.<br>' ...
-                    '&emsp;&emsp;7.3. Move the stage in the Z direction until the power reading stops increasing.<br>' ...
-                    '&emsp;&emsp;7.4. Move the stage up a bit so the wand is not pushing on the condenser.<br>' ...
-                    '&emsp;8. Press "Next" to start calibrating.</html>']));
+                    '&emsp;1. Take all NDFs out of the light path.<br>' ...
+                    '&emsp;2. Make sure the spot is the correctly sized and reasonably well-centered.<br>' ...
+                    '&emsp;3. Tape the wand to the stage, face down.<br>' ...
+                    '&emsp;4. Connect the wand BNC cable to the light meter input on front of the box.<br>' ...
+                    '&emsp;5. Close the curtains and dim the lights.<br>' ...
+                    '&emsp;6. Turn on the power meter and set the gain to 10^-3.<br>' ...
+                    '&emsp;7. Make sure the current (background) reading is ~0.01 or lower.<br>' ...
+                    '&emsp;8. Turn on the stimulation device to a reasonably bright setting.<br>' ...
+                    '&emsp;9. Center and focus the wand relative to the spot:<br>' ...
+                    '&emsp;&emsp;9.1. Move the stage in the X direction until you find the peak power reading.<br>' ...
+                    '&emsp;&emsp;9.2. Move the stage in the Y direction until you find the peak power reading.<br>' ...
+                    '&emsp;&emsp;9.3. Move the stage in the Z direction until the power reading stops increasing.<br>' ...
+                    '&emsp;&emsp;9.4. Move the stage up a bit so the wand is not pushing on the condenser.<br>' ...
+                    '&emsp;10. Press "Next" to start calibrating.<br><br>']));
             
             % Calibration card.
             calibrationLayout = uix.HBox( ...
@@ -172,6 +174,18 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'HorizontalAlignment', 'left');
             set(powerLayout, 'Widths', [85 -1 -1]);
             
+            noteLayout = uix.HBox( ...
+                'Parent', ledLayout, ...
+                'Spacing', 5);
+            Label( ...
+                'Parent', noteLayout, ...
+                'String', 'Note (optional):');
+            obj.calibrationCard.ledCard.noteField = uicontrol( ...
+                'Parent', noteLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left');
+            set(noteLayout, 'Widths', [85 -1]);
+            
             submitLayout = uix.HBox( ...
                 'Parent', ledLayout);
             uix.Empty('Parent', submitLayout);
@@ -183,7 +197,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Callback', @obj.onSelectedLedSubmit);
             set(submitLayout, 'Widths', [-1 75]);
             
-            set(ledLayout, 'Heights', [23 23 17 23 23 23 23 23]);
+            set(ledLayout, 'Heights', [23 23 17 23 23 23 23 23 23]);
             
             % Stage calibration card.
             stageLayout = uix.VBox( ...
@@ -281,6 +295,18 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'HorizontalAlignment', 'left');
             set(powerLayout, 'Widths', [85 -1 -1]);
             
+            noteLayout = uix.HBox( ...
+                'Parent', stageLayout, ...
+                'Spacing', 5);
+            Label( ...
+                'Parent', noteLayout, ...
+                'String', 'Note (optional):');
+            obj.calibrationCard.stageCard.noteField = uicontrol( ...
+                'Parent', noteLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left');
+            set(noteLayout, 'Widths', [85 -1]);
+            
             submitLayout = uix.HBox( ...
                 'Parent', stageLayout);
             uix.Empty('Parent', submitLayout);
@@ -292,7 +318,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Callback', @obj.onSelectedStageSubmit);
             set(submitLayout, 'Widths', [-1 75]);
             
-            set(stageLayout, 'Heights', [23 23 17 23 23 23 23 23]);
+            set(stageLayout, 'Heights', [23 23 17 23 23 23 23 23 23]);
             
             set(calibrationLayout, 'Widths', [-1 -2]);
             
@@ -511,19 +537,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function populateDetailsForLed(obj, led, setting)
-            table = obj.getPreviousCalibrationTable(led, setting);
-            if isempty(table)
-                names = {'(None)'};
-                values = {[]};
-            else
-                table = sortrows(table, 'date', 'descend');
-                names = cell(1, height(table));
-                values = cell(1, height(table));
-                for i = 1:height(table)
-                    names{i} = [datestr(table.date(i), 'dd-mmm-yyyy HH:MM PM') ' (' table.user{i} ')'];
-                    values{i} = table(i, :);
-                end
-            end
+            [names, values, table] = obj.getPreviousCalibrationDisplayNames(led, setting);
             set(obj.calibrationCard.ledCard.useCalibrationPopupMenu, 'String', names);
             set(obj.calibrationCard.ledCard.useCalibrationPopupMenu, 'Values', values);
             set(obj.calibrationCard.ledCard.useCalibrationPopupMenu, 'Enable', appbox.onOff(~isempty(table)));
@@ -533,30 +547,40 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             else
                 set(obj.calibrationCard.ledCard.calibrationUnitsField, 'String', led.background.displayUnits);
             end
+            set(obj.calibrationCard.ledCard.powerReadingField, 'String', '');
+            set(obj.calibrationCard.ledCard.noteField, 'String', '');
             
             set(obj.calibrationCard.detailCardPanel, 'Selection', 1);
         end
         
         function populateDetailsForStage(obj, stage, setting)
-            table = obj.getPreviousCalibrationTable(stage, setting);
-            if isempty(table)
-                names = {'(None)'};
-                values = {[]};
-            else
-                table = sortrows(table, 'date', 'descend');
-                names = cell(1, height(table));
-                values = cell(1, height(table));
-                for i = 1:height(table)
-                    names{i} = [datestr(table.date(i), 'dd-mmm-yyyy HH:MM PM') ' (' table.user{i} ')'];
-                    values{i} = table(i, :);
-                end
-            end
+            [names, values, table] = obj.getPreviousCalibrationDisplayNames(stage, setting);
             set(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'String', names);
             set(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Values', values);
             set(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Enable', appbox.onOff(~isempty(table)));
             set(obj.calibrationCard.stageCard.useButton, 'Enable', appbox.onOff(~isempty(table)));
             
             set(obj.calibrationCard.detailCardPanel, 'Selection', 2);
+        end
+        
+        function [n, v, t] = getPreviousCalibrationDisplayNames(obj, device, setting)
+            t = obj.getPreviousCalibrationTable(device, setting);
+            if isempty(t)
+                n = {'(None)'};
+                v = {[]};
+            else
+                t = sortrows(t, 'date', 'descend');
+                n = cell(1, height(t));
+                v = cell(1, height(t));
+                for i = 1:height(t)
+                    n{i} = [datestr(t.date(i), 'dd-mmm-yyyy HH:MM PM') ' (' t.user{i}];
+                    if iscellstr(t.note(i)) && ~isempty(t.note{i})
+                        n{i} = [n{i} ': ' t.note{i}];
+                    end
+                    n{i} = [n{i} ')'];
+                    v{i} = t(i, :);
+                end
+            end
         end
         
         function t = getPreviousCalibrationTable(obj, device, setting)
@@ -583,8 +607,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.updateStateOfControls();
         end
         
-        function success = calibrateDevice(obj, device, setting, intensity, diameter, power, reused)
-            if nargin < 7
+        function success = calibrateDevice(obj, device, setting, intensity, diameter, power, note, reused)
+            if nargin < 8
                 reused = false;
             end
             
@@ -615,6 +639,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'diameter', diameter, ...
                 'power', power, ...
                 'factor', factor, ...
+                'note', note, ...
                 'reused', reused);
             obj.calibrations(device.name) = m;
             obj.setDeviceCalibrated(device, setting);
@@ -686,7 +711,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             
             entry = get(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Value');
-            success = obj.calibrateDevice(device, setting, entry.intensity, entry.diameter, entry.power, true);
+            success = obj.calibrateDevice(device, setting, entry.intensity, entry.diameter, entry.power, entry.note, true);
             if ~success
                 return;
             end
@@ -765,8 +790,9 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 obj.view.showError('Could not parse intensity, power, or diameter to a valid scalar value.');
                 return;
             end
+            note = get(obj.calibrationCard.ledCard.noteField, 'String');
             
-            obj.submit(device, setting, intensity, diameter, power);
+            obj.submit(device, setting, intensity, diameter, power, note);
         end
         
         function onSelectedStageSubmit(obj, ~, ~)
@@ -782,12 +808,13 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 obj.view.showError('Could not parse intensity, power, or diameter to a valid scalar value.');
                 return;
             end
+            note = get(obj.calibrationCard.stageCard.noteField, 'String');
             
-            obj.submit(device, setting, intensity, diameter, power);
+            obj.submit(device, setting, intensity, diameter, power, note);
         end
         
-        function submit(obj, device, setting, intensity, diameter, power)
-            success = obj.calibrateDevice(device, setting, intensity, diameter, power);
+        function submit(obj, device, setting, intensity, diameter, power, note)
+            success = obj.calibrateDevice(device, setting, intensity, diameter, power, note);
             if ~success
                 return;
             end
@@ -858,6 +885,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                         continue;
                     end
                     entry.user = {entry.user};
+                    entry.note = {entry.note};
                     entry.reused = [];
                     t(end + 1, :) = entry; %#ok<AGROW>
                     writetable(t, paths(setting), 'Delimiter', 'tab');
@@ -902,12 +930,14 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(obj.calibrationCard.ledCard.ledOnButton, 'Value', obj.isLedOn);
             set(obj.calibrationCard.ledCard.spotDiameterField, 'Enable', onOff(hasDevice && obj.isLedOn));
             set(obj.calibrationCard.ledCard.powerReadingField, 'Enable', onOff(hasDevice && obj.isLedOn));
+            set(obj.calibrationCard.ledCard.noteField, 'Enable', onOff(hasDevice && obj.isLedOn));
             set(obj.calibrationCard.ledCard.submitButton, 'Enable', onOff(hasDevice && obj.isLedOn));
             set(obj.calibrationCard.stageCard.calibrationIntensityField, 'Enable', onOff(hasDevice && ~obj.isStageOn));
             set(obj.calibrationCard.stageCard.spotDiameterField, 'Enable', onOff(hasDevice && ~obj.isStageOn));
             set(obj.calibrationCard.stageCard.stageOnButton, 'Enable', onOff(hasDevice));
             set(obj.calibrationCard.stageCard.stageOnButton, 'Value', obj.isStageOn);
             set(obj.calibrationCard.stageCard.powerReadingField, 'Enable', onOff(hasDevice && obj.isStageOn));
+            set(obj.calibrationCard.stageCard.noteField, 'Enable', onOff(hasDevice && obj.isStageOn));
             set(obj.calibrationCard.stageCard.submitButton, 'Enable', onOff(hasDevice && obj.isStageOn));
             set(obj.backButton, 'Enable', onOff(isLastCard));
             set(obj.nextButton, 'Enable', onOff(~isLastCard || allCalibrated));
