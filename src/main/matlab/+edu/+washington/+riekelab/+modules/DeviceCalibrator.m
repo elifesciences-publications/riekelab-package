@@ -416,39 +416,35 @@ classdef DeviceCalibrator < symphonyui.ui.Module
     methods (Access = private)
         
         function populateDeviceList(obj)
-            settingToDevices = containers.Map();
-            settings = {};
+            settingToDevices = containers.Map();            
             for i = 1:numel(obj.allDevices)
                 device = obj.allDevices{i};
                 
-                desc = device.getConfigurationSettingDescriptors().findByName('gain');
-                if isempty(desc)
-                    if settingToDevices.isKey('none')
-                        settingToDevices('none') = [settingToDevices('none') {device}];
-                    else
-                        settingToDevices('none') = {device};
-                    end
-                    continue;
+                if ~any(strcmp('fluxFactorPaths', device.getResourceNames()))
+                    settings = {'none'};
+                else
+                    paths = device.getResource('fluxFactorPaths');
+                    settings = paths.keys;
                 end
                 
-                availableGains = desc.type.domain;
-                for k = 1:numel(availableGains)
-                    gain = availableGains{k};
-                    if isempty(gain)
-                        continue;
-                    end
-                    
-                    if settingToDevices.isKey(gain)
-                        settingToDevices(gain) = [settingToDevices(gain) {device}];
+                for k = 1:numel(settings)
+                    setting = settings{k};
+                    if settingToDevices.isKey(setting)
+                        settingToDevices(setting) = [settingToDevices(setting) {device}];
                     else
-                        settingToDevices(gain) = {device};
-                        settings{end + 1} = gain; %#ok<AGROW>
+                        settingToDevices(setting) = {device};
                     end
                 end
             end
             
-            if settingToDevices.isKey('none')
-                settings{end + 1} = 'none';
+            % This allows the settings to be displayed in a preferred order.
+            keys = settingToDevices.keys;
+            settings = {'low', 'medium', 'high', 'auto', 'red', 'green', 'blue', 'none'};
+            settings(cellfun(@(s)~any(strcmp(s, keys)), settings)) = [];
+            for i = 1:numel(keys)
+                if ~any(strcmp(keys{i}, settings))
+                    settings{end + 1} = keys{i}; %#ok<AGROW>
+                end
             end
             
             names = {};
@@ -559,6 +555,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Values', values);
             set(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Enable', appbox.onOff(~isempty(table)));
             set(obj.calibrationCard.stageCard.useButton, 'Enable', appbox.onOff(~isempty(table)));
+            set(obj.calibrationCard.stageCard.powerReadingField, 'String', '');
+            set(obj.calibrationCard.stageCard.noteField, 'String', '');
             
             set(obj.calibrationCard.detailCardPanel, 'Selection', 2);
         end
@@ -598,7 +596,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             
             entry = get(obj.calibrationCard.ledCard.useCalibrationPopupMenu, 'Value');
-            success = obj.calibrateDevice(device, setting, entry.intensity, entry.diameter, entry.power, true);
+            success = obj.calibrateDevice(device, setting, entry.intensity, entry.diameter, entry.power, entry.note, true);
             if ~success
                 return;
             end
@@ -880,7 +878,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                     else
                         t = table();
                     end
-                    entry = struct2table(cal(setting));
+                    entry = struct2table(cal(setting), 'AsArray', true);
                     if entry.reused
                         continue;
                     end
