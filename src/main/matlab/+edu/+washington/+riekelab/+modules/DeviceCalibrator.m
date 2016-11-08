@@ -3,6 +3,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
     properties (Access = private)
         leds
         stage
+        didShowWarning
         isLedOn
         isStageOn
         calibrations
@@ -375,6 +376,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 obj.stage = stages{1};
             end
             
+            obj.didShowWarning = false;
             obj.isLedOn = false;
             obj.isStageOn = false;
             
@@ -395,7 +397,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                     if ~exist(paths(setting), 'file')
                         continue;
                     end
-                    t = readtable(paths(setting));
+                    t = readtable(paths(setting), 'Format', '%s %s %f %f %f %f %s');
                     t.date = datetime(t.date);
                     m(setting) = t;
                 end
@@ -457,10 +459,10 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                     if obj.isDeviceCalibrated(d, setting)
                         n = ['<html><font color="green"><b>' d.name];
                     else
-                        n = d.name;
+                        n = ['<html>' d.name];
                     end
                     if ~strcmp(setting, 'none')
-                        n = [n ' - ' setting]; %#ok<AGROW>
+                        n = [n ' - <i>' setting]; %#ok<AGROW>
                     end
                     names{end + 1} = n; %#ok<AGROW>
                     values{end + 1} = struct('device', d, 'setting', setting); %#ok<AGROW>
@@ -491,13 +493,13 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 if turnOn
                     intensity = str2double(get(obj.calibrationCard.stageCard.calibrationIntensityField, 'String'));
                     diameter = str2double(get(obj.calibrationCard.stageCard.spotDiameterField, 'String'));
-                    obj.turnOnStage(device, intensity, diameter);
+                    obj.turnOnStage(device, setting, intensity, diameter);
                 end
                 obj.populateDetailsForStage(device, setting);
             else
                 if turnOn
                     intensity = str2double(get(obj.calibrationCard.ledCard.calibrationIntensityField, 'String'));
-                    obj.turnOnLed(device, intensity);
+                    obj.turnOnLed(device, setting, intensity);
                 end
                 obj.populateDetailsForLed(device, setting);
             end
@@ -656,7 +658,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             i = cellfun(@(v)isequal(v, struct('device', device, 'setting', setting)), values);
             n = ['<html><font color="green"><b>' device.name];
             if ~strcmp(setting, 'none')
-                n = [n ' - ' setting];
+                n = [n ' - <i>' setting];
             end
             names{i} = n;
             
@@ -669,15 +671,22 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             
             turnOn = get(obj.calibrationCard.ledCard.ledOnButton, 'Value');
             if turnOn
-                led = obj.getSelectedDevice();
+                [led, setting] = obj.getSelectedDevice();
                 intensity = str2double(get(obj.calibrationCard.ledCard.calibrationIntensityField, 'String'));
-                obj.turnOnLed(led, intensity);
+                obj.turnOnLed(led, setting, intensity);
             end
             
             obj.updateStateOfControls();
         end
         
-        function turnOnLed(obj, led, intensity)
+        function turnOnLed(obj, led, setting, intensity)
+            if ~obj.didShowWarning && ~strcmpi(setting, 'none')
+                obj.view.showMessage(['Make sure you manually change the LED gain according to the setting you are ' ...
+                    'calibrating. It should currently be ''' setting ''' for the ''' led.name '''. This warning ' ...
+                    'will not appear again.'], 'Warning');
+                obj.didShowWarning = true;
+            end
+            
             try
                 led.background = symphonyui.core.Measurement(intensity, led.background.displayUnits);
                 led.applyBackground();
@@ -723,17 +732,23 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             
             turnOn = get(obj.calibrationCard.stageCard.stageOnButton, 'Value');
             if turnOn
-                device = obj.getSelectedDevice();
+                [device, setting] = obj.getSelectedDevice();
                 intensity = str2double(get(obj.calibrationCard.stageCard.calibrationIntensityField, 'String'));
                 diameter = str2double(get(obj.calibrationCard.stageCard.spotDiameterField, 'String'));
-                obj.turnOnStage(device, intensity, diameter);
+                obj.turnOnStage(device, setting, intensity, diameter);
             end
             
             obj.updateStateOfControls();
         end
         
-        function turnOnStage(obj, device, intensity, diameter)
+        function turnOnStage(obj, device, setting, intensity, diameter)
             try
+                if regexpi(obj.stage.name, 'Microdisplay', 'once')
+                    obj.stage.setBrightness(setting);
+                elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
+                    obj.stage.setSingleLedEnable(setting);
+                end
+                
                 p = stage.core.Presentation(1/device.getMonitorRefreshRate()); %#ok<PROPLC>
 
                 spot = stage.builtin.stimuli.Ellipse(); %#ok<PROPLC>
@@ -762,6 +777,11 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             if isempty(obj.stage) || (~obj.isStageOn && ~force)
                 return;
             end
+            if regexpi(obj.stage.name, 'Microdisplay', 'once')
+                obj.stage.setBrightness('minimum');
+            elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
+                obj.stage.setSingleLedEnable('auto');
+            end
             obj.stage.play(stage.core.Presentation(1/obj.stage.getMonitorRefreshRate())); %#ok<PROPLC>
             obj.stage.getPlayInfo();
             obj.isStageOn = false;
@@ -785,7 +805,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             diameter = str2double(get(obj.calibrationCard.ledCard.spotDiameterField, 'String'));
             power = str2double(get(obj.calibrationCard.ledCard.powerReadingField, 'String'));
             if isnan(intensity) || isnan(diameter) || isnan(power)
-                obj.view.showError('Could not parse intensity, power, or diameter to a valid scalar value.');
+                obj.view.showError('Could not parse intensity, diameter, or power to a valid scalar value.');
                 return;
             end
             note = get(obj.calibrationCard.ledCard.noteField, 'String');
@@ -803,7 +823,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             diameter = str2double(get(obj.calibrationCard.stageCard.spotDiameterField, 'String'));
             power = str2double(get(obj.calibrationCard.stageCard.powerReadingField, 'String'));
             if isnan(intensity) || isnan(diameter) || isnan(power)
-                obj.view.showError('Could not parse intensity, power, or diameter to a valid scalar value.');
+                obj.view.showError('Could not parse intensity, diameter, or power to a valid scalar value.');
                 return;
             end
             note = get(obj.calibrationCard.stageCard.noteField, 'String');
@@ -882,8 +902,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                     if entry.reused
                         continue;
                     end
-                    entry.user = {entry.user};
-                    entry.note = {entry.note};
                     entry.reused = [];
                     t(end + 1, :) = entry; %#ok<AGROW>
                     writetable(t, paths(setting), 'Delimiter', 'tab');

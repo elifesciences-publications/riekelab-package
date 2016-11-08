@@ -132,6 +132,21 @@ classdef LightCrafterDevice < symphonyui.core.Device
            obj.stageClient.clearMemory();
         end
         
+        function setSingleLedEnable(obj, setting)
+            switch lower(setting)
+                case 'auto'
+                    obj.setLedEnables(true, false, false, false);
+                case 'red'
+                    obj.setLedEnables(false, true, false, false);
+                case 'green'
+                    obj.setLedEnables(false, false, true, false);
+                case 'blue'
+                    obj.setLedEnables(false, false, false, true);
+                otherwise
+                    error('Unknown LED enable setting');
+            end
+        end
+        
         function setLedEnables(obj, auto, red, green, blue)
             obj.lightCrafter.setLedEnables(auto, red, green, blue);
             [a, r, g, b] = obj.lightCrafter.getLedEnables();
