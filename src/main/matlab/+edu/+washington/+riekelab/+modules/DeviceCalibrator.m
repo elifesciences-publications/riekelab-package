@@ -3,9 +3,9 @@ classdef DeviceCalibrator < symphonyui.ui.Module
     properties (Access = private)
         leds
         stage
-        didShowWarning
         isLedOn
         isStageOn
+        didShowWarning
         calibrations
         previousCalibrations
     end
@@ -376,9 +376,9 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 obj.stage = stages{1};
             end
             
-            obj.didShowWarning = false;
             obj.isLedOn = false;
             obj.isStageOn = false;
+            obj.didShowWarning = false;
             
             obj.calibrations = containers.Map();
             obj.previousCalibrations = containers.Map();
@@ -672,7 +672,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         end
         
         function tf = isDeviceCalibrated(obj, device, setting)
-            tf = any(strcmp('calibrations', device.getResourceNames())) || ...
+            tf = any(strcmp('fluxFactors', device.getResourceNames())) || ...
                 (obj.calibrations.isKey(device.name) && obj.calibrations(device.name).isKey(setting));
         end
         
@@ -906,14 +906,19 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 name = keys{i};
                 device = obj.allDevices{cellfun(@(l)strcmp(l.name, name), obj.allDevices)};
                 
-                if any(strcmp('calibrations', device.getResourceNames()))
-                    device.removeResource('calibrations');
+                if any(strcmp('fluxFactors', device.getResourceNames()))
+                    device.removeResource('fluxFactors');
                 end
                 if ~obj.calibrations.isKey(name)
                     continue;
                 end
                 cal = obj.calibrations(name);
-                device.addResource('calibrations', cal);
+                settings = cal.keys;
+                factors = containers.Map();
+                for k = 1:numel(settings)
+                    factors(settings{k}) = cal(settings{k}).factor;
+                end
+                device.addResource('fluxFactors', factors);
                 
                 if ~obj.previousCalibrations.isKey(name)
                     continue;
@@ -925,7 +930,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 end
                 paths = device.getResource('fluxFactorPaths');
                 
-                settings = cal.keys;
                 for k = 1:numel(settings)
                     setting = settings{k};
                     if prevCal.isKey(setting)
