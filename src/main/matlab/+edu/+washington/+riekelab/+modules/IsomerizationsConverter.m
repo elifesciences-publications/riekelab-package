@@ -348,7 +348,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 msg = 'LED is missing spectrum';
             elseif ~any(strcmp('ndfAttenuations', led.getResourceNames()))
                 msg = 'LED is missing ndf attentuations';
-            elseif ~any(strcmp('calibrations', led.getResourceNames()))
+            elseif ~any(strcmp('fluxFactors', led.getResourceNames()))
                 msg = 'LED must be calibrated';
             elseif ~led.hasConfigurationSetting('ndfs')
                 msg = 'LED is missing ndfs setting';
@@ -379,7 +379,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             led = get(obj.parametersControls.ledPopupMenu, 'Value');
             spectrum = led.getResource('spectrum');
             attenuations = led.getResource('ndfAttenuations');
-            calibrations = led.getResource('calibrations');
+            fluxFactors = led.getResource('fluxFactors');
             ndfs = led.getConfigurationSetting('ndfs');
             gain = led.getConfigurationSetting('gain');
             path = led.getConfigurationSetting('lightPath');
@@ -389,7 +389,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 volts = str2double(value);
             else
                 isom = str2double(value);
-                volts = edu.washington.riekelab.util.convisom(isom, 'isom', calibrations(gain), spectrum, ...
+                volts = edu.washington.riekelab.util.convisom(isom, 'isom', fluxFactors(gain), spectrum, ...
                     photoreceptors(event.fieldName).spectrum, photoreceptors(event.fieldName).collectingArea, ...
                     ndfs, attenuations);
                 set(obj.converterControls.fields('volts').control, 'String', num2str(volts));
@@ -399,7 +399,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             names(strcmp(names, event.fieldName)) = [];
             for i = 1:numel(names)
                 n = names{i};
-                isom = edu.washington.riekelab.util.convisom(volts, 'volts', calibrations(gain), spectrum, ...
+                isom = edu.washington.riekelab.util.convisom(volts, 'volts', fluxFactors(gain), spectrum, ...
                     photoreceptors(n).spectrum, photoreceptors(n).collectingArea, ...
                     ndfs, attenuations);
                 set(obj.converterControls.fields(n).control, 'String', num2str(round(isom)));
@@ -445,7 +445,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
             
             resource = event.data;
-            if strcmp(resource.name, 'calibrations')
+            if strcmp(resource.name, 'fluxFactors')
                 obj.populateConverterBox();
                 obj.pack();
             end
