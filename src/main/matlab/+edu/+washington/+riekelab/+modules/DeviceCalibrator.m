@@ -399,6 +399,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                     end
                     t = readtable(paths(setting), 'Format', '%s %s %f %f %f %f %s');
                     t.date = datetime(t.date);
+                    t = sortrows(t, 'date', 'descend');
                     m(setting) = t;
                 end
                 
@@ -569,7 +570,6 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 n = {'(None)'};
                 v = {[]};
             else
-                t = sortrows(t, 'date', 'descend');
                 n = cell(1, height(t));
                 v = cell(1, height(t));
                 for i = 1:height(t)
@@ -627,6 +627,25 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             ssize = pi * diameter * diameter / 4;
             factor = power / (ssize * intensity);
             
+            prevTable = obj.getPreviousCalibrationTable(device, setting);
+            if ~isempty(prevTable)
+                old = prevTable.factor(1);
+                diff = abs(factor - old) / ((factor + old) / 2);
+                if diff > 0.1
+                    percent = diff * 100;
+                    result = obj.view.showMessage(['The calculated photon flux conversion factor is ' ...
+                        num2str(round(10*percent)/10) '% different than the most recent calibrated value. ' ...
+                        'Are you sure you want to submit this value?'], ...
+                        'Warning', ...
+                        'button1', 'Cancel', ...
+                        'button2', 'Submit');
+                    if ~strcmp(result, 'Submit')
+                        success = false;
+                        return;
+                    end
+                end
+            end
+            
             if obj.calibrations.isKey(device.name)
                 m = obj.calibrations(device.name);
             else
@@ -679,13 +698,13 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.updateStateOfControls();
         end
         
-        function turnOnLed(obj, led, setting, intensity)
-            if ~obj.didShowWarning && ~strcmpi(setting, 'none')
-                obj.view.showMessage(['Make sure you manually change the LED gain according to the setting you are ' ...
-                    'calibrating. It should currently be ''' setting ''' for the ''' led.name '''. This warning ' ...
-                    'will not appear again.'], 'Warning');
-                obj.didShowWarning = true;
-            end
+        function turnOnLed(obj, led, setting, intensity) %#ok<INUSL>
+%             if ~obj.didShowWarning && ~strcmpi(setting, 'none')
+%                 obj.view.showMessage(['Make sure you manually change the LED gain according to the setting you are ' ...
+%                     'calibrating. It should currently be ''' setting ''' for the ''' led.name '''. This warning ' ...
+%                     'will not appear again.'], 'Warning');
+%                 obj.didShowWarning = true;
+%             end
             
             try
                 led.background = symphonyui.core.Measurement(intensity, led.background.displayUnits);
@@ -743,10 +762,12 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         
         function turnOnStage(obj, device, setting, intensity, diameter)
             try
-                if regexpi(obj.stage.name, 'Microdisplay', 'once')
-                    obj.stage.setBrightness(setting);
-                elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
-                    obj.stage.setSingleLedEnable(setting);
+                if ~strcmpi(setting, 'none')
+                    if regexpi(obj.stage.name, 'Microdisplay', 'once')
+                        obj.stage.setBrightness(setting);
+                    elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
+                        obj.stage.setSingleLedEnable(setting);
+                    end
                 end
                 
                 p = stage.core.Presentation(1/device.getMonitorRefreshRate()); %#ok<PROPLC>
@@ -831,7 +852,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.submit(device, setting, intensity, diameter, power, note);
         end
         
-        function submit(obj, device, setting, intensity, diameter, power, note)
+        function submit(obj, device, setting, intensity, diameter, power, note)            
             success = obj.calibrateDevice(device, setting, intensity, diameter, power, note);
             if ~success
                 return;
