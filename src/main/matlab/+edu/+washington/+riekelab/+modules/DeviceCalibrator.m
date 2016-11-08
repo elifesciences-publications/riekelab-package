@@ -320,9 +320,9 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(submitLayout, 'Widths', [-1 75]);
             
             set(stageLayout, 'Heights', [23 23 17 23 23 23 23 23 23]);
+            set(obj.calibrationCard.detailCardPanel, 'Selection', 1);
             
             set(calibrationLayout, 'Widths', [-1 -2]);
-            
             set(obj.wizardCardPanel, 'Selection', 1);
                 
             javacomponent('javax.swing.JSeparator', [], wizardLayout);
@@ -497,12 +497,18 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                     obj.turnOnStage(device, setting, intensity, diameter);
                 end
                 obj.populateDetailsForStage(device, setting);
+                uicontrol(obj.calibrationCard.stageCard.powerReadingField);
             else
                 if turnOn
                     intensity = str2double(get(obj.calibrationCard.ledCard.calibrationIntensityField, 'String'));
                     obj.turnOnLed(device, setting, intensity);
                 end
                 obj.populateDetailsForLed(device, setting);
+                if isempty(get(obj.calibrationCard.ledCard.spotDiameterField, 'String'))
+                    uicontrol(obj.calibrationCard.ledCard.spotDiameterField);
+                else
+                    uicontrol(obj.calibrationCard.ledCard.powerReadingField);
+                end
             end
             obj.updateStateOfControls();
         end
@@ -693,6 +699,12 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 [led, setting] = obj.getSelectedDevice();
                 intensity = str2double(get(obj.calibrationCard.ledCard.calibrationIntensityField, 'String'));
                 obj.turnOnLed(led, setting, intensity);
+                
+                if isempty(get(obj.calibrationCard.ledCard.spotDiameterField, 'String'))
+                    uicontrol(obj.calibrationCard.ledCard.spotDiameterField);
+                else
+                    uicontrol(obj.calibrationCard.ledCard.powerReadingField);
+                end
             end
             
             obj.updateStateOfControls();
@@ -755,6 +767,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 intensity = str2double(get(obj.calibrationCard.stageCard.calibrationIntensityField, 'String'));
                 diameter = str2double(get(obj.calibrationCard.stageCard.spotDiameterField, 'String'));
                 obj.turnOnStage(device, setting, intensity, diameter);
+                
+                uicontrol(obj.calibrationCard.stageCard.powerReadingField);
             end
             
             obj.updateStateOfControls();
