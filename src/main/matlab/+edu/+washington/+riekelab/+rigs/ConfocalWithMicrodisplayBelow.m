@@ -4,6 +4,7 @@ classdef ConfocalWithMicrodisplayBelow < edu.washington.riekelab.rigs.Confocal
         
         function obj = ConfocalWithMicrodisplayBelow()
             import symphonyui.builtin.devices.*;
+            import symphonyui.core.*;
             import edu.washington.*;
             
             daq = obj.daqController;
@@ -17,6 +18,14 @@ classdef ConfocalWithMicrodisplayBelow < edu.washington.riekelab.rigs.Confocal
             microdisplay = riekelab.devices.MicrodisplayDevice('gammaRamps', ramps, 'micronsPerPixel', 1.2, 'comPort', 'COM3');
             microdisplay.bindStream(daq.getStream('doport1'));
             daq.getStream('doport1').setBitPosition(microdisplay, 15);
+            microdisplay.addConfigurationSetting('ndfs', {}, ...
+                'type', PropertyType('cellstr', 'row', {'E1', 'E2', 'E3', 'E4', 'E5'}));
+            microdisplay.addResource('fluxFactorPaths', containers.Map( ...
+                {'low', 'medium', 'high'}, { ...
+                riekelab.Package.getCalibrationResource('rigs', 'confocal', 'microdisplay_below_low_flux_factors.txt'), ...
+                riekelab.Package.getCalibrationResource('rigs', 'confocal', 'microdisplay_below_medium_flux_factors.txt'), ...
+                riekelab.Package.getCalibrationResource('rigs', 'confocal', 'microdisplay_below_high_flux_factors.txt')}));
+            microdisplay.addConfigurationSetting('lightPath', 'below', 'isReadOnly', true);
             obj.addDevice(microdisplay);
             
             frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(daq.getStream('ai7'));

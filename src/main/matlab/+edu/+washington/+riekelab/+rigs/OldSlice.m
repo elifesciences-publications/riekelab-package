@@ -28,7 +28,7 @@ classdef OldSlice < symphonyui.core.descriptions.RigDescription
                 riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'red_led_medium_flux_factors.txt'), ...
                 riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'red_led_high_flux_factors.txt')}));
             red.addConfigurationSetting('lightPath', '', ...
-                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
+                'type', PropertyType('char', 'row', {'', 'below', 'above'}));
             red.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'red_led_spectrum.txt')));
             obj.addDevice(red);
             
@@ -46,7 +46,7 @@ classdef OldSlice < symphonyui.core.descriptions.RigDescription
                 riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'green_led_medium_flux_factors.txt'), ...
                 riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'green_led_high_flux_factors.txt')}));
             green.addConfigurationSetting('lightPath', '', ...
-                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
+                'type', PropertyType('char', 'row', {'', 'below', 'above'}));
             green.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'green_led_spectrum.txt')));
             obj.addDevice(green);
             
@@ -64,7 +64,7 @@ classdef OldSlice < symphonyui.core.descriptions.RigDescription
                 riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'uv_led_medium_flux_factors.txt'), ...
                 riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'uv_led_high_flux_factors.txt')}));
             uv.addConfigurationSetting('lightPath', '', ...
-                'type', PropertyType('char', 'row', {'', 'above', 'below'}));
+                'type', PropertyType('char', 'row', {'', 'below', 'above'}));
             uv.addResource('spectrum', importdata(riekelab.Package.getCalibrationResource('rigs', 'old_slice', 'uv_led_spectrum.txt')));
             obj.addDevice(uv);
             
