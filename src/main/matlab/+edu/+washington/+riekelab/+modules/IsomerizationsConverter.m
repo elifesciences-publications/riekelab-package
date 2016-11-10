@@ -4,6 +4,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         leds
         ledListeners
         species
+        preparation
+        preparationListeners
     end
 
     properties (Access = private)
@@ -52,6 +54,9 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             Label( ...
                 'Parent', parametersLayout, ...
                 'String', 'Species:');
+            Label( ...
+                'Parent', parametersLayout, ...
+                'String', 'Preparation:');
             obj.parametersControls.ledPopupMenu = MappedPopupMenu( ...
                 'Parent', parametersLayout, ...
                 'String', {' '}, ...
@@ -73,6 +78,11 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'HorizontalAlignment', 'left', ...
                 'Enable', 'off');
             obj.parametersControls.speciesField = uicontrol( ...
+                'Parent', parametersLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Enable', 'off');
+            obj.parametersControls.preparationField = uicontrol( ...
                 'Parent', parametersLayout, ...
                 'Style', 'edit', ...
                 'HorizontalAlignment', 'left', ...
@@ -102,9 +112,14 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'Icon', App.getResource('icons', 'help.png'), ...
                 'TooltipString', 'Species Help', ...
                 'Callback', @obj.onSelectedSpeciesHelp);
+            Button( ...
+                'Parent', parametersLayout, ...
+                'Icon', App.getResource('icons', 'help.png'), ...
+                'TooltipString', 'Preparation Help', ...
+                'Callback', @obj.onSelectedPreparationHelp);
             set(parametersLayout, ...
                 'Widths', [70 -1 22], ...
-                'Heights', [23 23 23 23 23]);
+                'Heights', [23 23 23 23 23 23]);
 
             obj.converterControls.box = uix.BoxPanel( ...
                 'Parent', obj.mainLayout, ...
@@ -125,6 +140,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         function willGo(obj)
             obj.leds = obj.configurationService.getDevices('LED');
             obj.species = obj.findSpecies();
+            obj.preparation = obj.findPreparation();
             
             obj.populateParametersBox();
             obj.populateConverterBox();
@@ -136,6 +152,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             bind@symphonyui.ui.Module(obj);
 
             obj.bindLeds();
+            obj.bindPreparation();
 
             d = obj.documentationService;
             obj.addListener(d, 'BeganEpochGroup', @obj.onServiceBeganEpochGroup);
@@ -172,6 +189,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.populateGain();
             obj.populateLightPath();
             obj.populateSpecies();
+            obj.populatePreparation();
         end
 
         function populateLedList(obj)
@@ -282,6 +300,61 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'current epoch group. If there is no current epoch group, this field will be empty.'], 'Species Help');
         end
         
+        function populatePreparation(obj)
+            if isempty(obj.preparation) || isempty(obj.preparation.getProperty('preparation'))
+                set(obj.parametersControls.preparationField, 'String', '');
+            else
+                set(obj.parametersControls.preparationField, 'String', obj.preparation.getProperty('preparation'));
+            end
+        end
+
+        function s = findPreparation(obj)
+            s = [];
+            if ~obj.documentationService.hasOpenFile()
+                return;
+            end
+
+            group = obj.documentationService.getCurrentEpochGroup();
+            if isempty(group)
+                return;
+            end
+
+            source = group.source;
+            while ~isempty(source) ...
+                    && isempty(source.getPropertyDescriptors().findByName('preparation')) ...
+                    && ~any(strcmp(source.getResourceNames(), 'photoreceptorOrientations'))
+                source = source.parent;
+            end
+            s = source;
+        end
+        
+        function bindPreparation(obj)
+            if ~isempty(obj.preparation)
+                obj.preparationListeners{end + 1} = obj.addListener(obj.preparation, 'SetProperty', @obj.onPreparationSetProperty);
+            end
+        end
+        
+        function unbindPreparation(obj)
+            while ~isempty(obj.preparationListeners)
+                obj.removeListener(obj.preparationListeners{1});
+                obj.preparationListeners(1) = [];
+            end
+        end
+        
+        function onPreparationSetProperty(obj, ~, event)
+            property = event.data;
+            if strcmp(property.name, 'preparation')
+                obj.populatePreparation();
+                obj.populateConverterBox();
+                obj.pack();
+            end
+        end
+        
+        function onSelectedPreparationHelp(obj, ~, ~)
+            obj.view.showMessage(['The preparation field is auto-populated based on the preparation of the source of the ' ...
+                'current epoch group. If there is no current epoch group, this field will be empty.'], 'Preparation Help');
+        end
+        
         function populateConverterBox(obj)
             import appbox.*;
             
@@ -362,8 +435,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 msg = 'Light path must not be empty';
             elseif isempty(obj.species)
                 msg = 'Species must not be empty';
-            elseif ~any(strcmp('photoreceptors', obj.species.getResourceNames()))
-                msg = 'Species is missing photoreceptors';
+            elseif isempty(obj.preparation) || isempty(obj.preparation.getProperty('preparation'))
+                msg = 'Preparation must not be empty';
             end
             tf = isempty(msg);
         end
@@ -384,14 +457,34 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             gain = led.getConfigurationSetting('gain');
             path = led.getConfigurationSetting('lightPath');
             photoreceptors = obj.species.getResource('photoreceptors');
+            prep = obj.preparation.getProperty('preparation');
+            orientations = obj.preparation.getResource('photoreceptorOrientations');
+            if orientations.isKey(prep)
+                orientation = orientations(prep);
+            else
+                orientation = '';
+            end
+            
+            function a = getCollectingArea(map, path, orientation)
+                if (strcmpi(path, 'below') && any(strcmpi(orientation, {'down', 'lateral'}))) ...
+                        || (strcmpi(path, 'above') && any(strcmpi(orientation, {'up', 'lateral'})))
+                    a = map('photoreceptorSide');
+                elseif (strcmpi(path, 'below') && strcmpi(orientation, 'up')) ...
+                        || (strcmpi(path, 'above') && strcmpi(orientation, 'down'))
+                    a = map('ganglionCellSide');
+                else
+                    warning('Unexpected light path or photoreceptor orientation. Using 0 for collecting area.');
+                    a = 0;
+                end
+            end
             
             if strcmp(event.fieldName, 'volts')
                 volts = str2double(value);
             else
                 isom = str2double(value);
+                collectingArea = getCollectingArea(photoreceptors(event.fieldName).collectingArea, path, orientation);
                 volts = edu.washington.riekelab.util.convisom(isom, 'isom', fluxFactors(gain), spectrum, ...
-                    photoreceptors(event.fieldName).spectrum, photoreceptors(event.fieldName).collectingArea, ...
-                    ndfs, attenuations);
+                    photoreceptors(event.fieldName).spectrum, collectingArea, ndfs, attenuations);
                 set(obj.converterControls.fields('volts').control, 'String', num2str(volts));
             end
             
@@ -399,9 +492,9 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             names(strcmp(names, event.fieldName)) = [];
             for i = 1:numel(names)
                 n = names{i};
+                collectingArea = getCollectingArea(photoreceptors(n).collectingArea, path, orientation);
                 isom = edu.washington.riekelab.util.convisom(volts, 'volts', fluxFactors(gain), spectrum, ...
-                    photoreceptors(n).spectrum, photoreceptors(n).collectingArea, ...
-                    ndfs, attenuations);
+                    photoreceptors(n).spectrum, collectingArea, ndfs, attenuations);
                 set(obj.converterControls.fields(n).control, 'String', num2str(round(isom)));
             end
         end
@@ -454,25 +547,39 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         function onServiceBeganEpochGroup(obj, ~, ~)
             obj.species = obj.findSpecies();
             
+            obj.unbindPreparation();
+            obj.preparation = obj.findPreparation();
+            obj.bindPreparation();
+            
             obj.populateSpecies();
+            obj.populatePreparation();
             obj.populateConverterBox();
             
             obj.pack();
         end
 
-        function onServiceEndedEpochGroup(obj, ~, ~)
+        function onServiceEndedEpochGroup(obj, ~, ~)           
             obj.species = obj.findSpecies();
             
+            obj.unbindPreparation();
+            obj.preparation = obj.findPreparation();
+            obj.bindPreparation();
+            
             obj.populateSpecies();
+            obj.populatePreparation();
             obj.populateConverterBox();
             
             obj.pack();
         end
 
-        function onServiceClosedFile(obj, ~, ~)
+        function onServiceClosedFile(obj, ~, ~)            
             obj.species = [];
             
+            obj.unbindPreparation();
+            obj.preparation = [];
+            
             obj.populateSpecies();
+            obj.populatePreparation();
             obj.populateConverterBox();
             
             obj.pack();
@@ -480,7 +587,6 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
         function onServiceInitializedRig(obj, ~, ~)
             obj.unbindLeds();
-            
             obj.leds = obj.configurationService.getDevices('LED');
             
             obj.populateParametersBox();
