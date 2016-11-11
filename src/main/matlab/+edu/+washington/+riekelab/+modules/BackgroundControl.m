@@ -1,12 +1,19 @@
 classdef BackgroundControl < symphonyui.ui.Module
     
     properties (Access = private)
+        log
+        settings
         devices
         deviceListeners
         deviceGrid
     end
     
     methods
+        
+        function obj = BackgroundControl()
+            obj.log = log4m.LogManager.getLogger(class(obj));
+            obj.settings = edu.washington.riekelab.modules.settings.BackgroundControlSettings();
+        end
         
         function createUi(obj, figureHandle)
             import appbox.*;
@@ -30,6 +37,19 @@ classdef BackgroundControl < symphonyui.ui.Module
         function willGo(obj)
             obj.devices = obj.configurationService.getOutputDevices();
             obj.populateDeviceGrid();
+            try
+                obj.loadSettings();
+            catch x
+                obj.log.debug(['Failed to load settings: ' x.message], x);
+            end
+        end
+        
+        function willStop(obj)
+            try
+                obj.saveSettings();
+            catch x
+                obj.log.debug(['Failed to save settings: ' x.message], x);
+            end
         end
         
         function bind(obj)
@@ -103,6 +123,17 @@ classdef BackgroundControl < symphonyui.ui.Module
         
         function onDeviceSetBackground(obj, ~, ~)
             obj.updateDeviceGrid();
+        end
+        
+        function loadSettings(obj)
+            if ~isempty(obj.settings.viewPosition)
+                obj.view.position = obj.settings.viewPosition;
+            end
+        end
+
+        function saveSettings(obj)
+            obj.settings.viewPosition = obj.view.position;
+            obj.settings.save();
         end
         
     end

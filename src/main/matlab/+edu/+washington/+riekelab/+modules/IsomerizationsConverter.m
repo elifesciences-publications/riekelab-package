@@ -1,6 +1,8 @@
 classdef IsomerizationsConverter < symphonyui.ui.Module
 
     properties (Access = private)
+        log
+        settings
         leds
         stage
         deviceListeners
@@ -16,6 +18,11 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
     end
 
     methods
+        
+        function obj = IsomerizationsConverter()
+            obj.log = log4m.LogManager.getLogger(class(obj));
+            obj.settings = edu.washington.riekelab.modules.settings.IsomerizationsConverterSettings();
+        end
 
         function createUi(obj, figureHandle)
             import appbox.*;
@@ -152,7 +159,21 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.populateParametersBox();
             obj.populateConverterBox();
             
+            try
+                obj.loadSettings();
+            catch x
+                obj.log.debug(['Failed to load settings: ' x.message], x);
+            end
+            
             obj.pack();
+        end
+        
+        function willStop(obj)
+            try
+                obj.saveSettings();
+            catch x
+                obj.log.debug(['Failed to save settings: ' x.message], x);
+            end
         end
 
         function bind(obj)
@@ -617,6 +638,17 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.pack();
             
             obj.bindDevices();
+        end
+        
+        function loadSettings(obj)
+            if ~isempty(obj.settings.viewPosition)
+                obj.view.position = obj.settings.viewPosition;
+            end
+        end
+
+        function saveSettings(obj)
+            obj.settings.viewPosition = obj.view.position;
+            obj.settings.save();
         end
 
     end
