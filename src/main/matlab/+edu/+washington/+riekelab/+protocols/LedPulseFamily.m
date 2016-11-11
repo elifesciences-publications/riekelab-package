@@ -41,6 +41,14 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
+        function d = getPropertyDescriptor(obj, name)
+            d = getPropertyDescriptor@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, name);
+            
+            if strncmp(name, 'amp2', 4) && numel(obj.rig.getDeviceNames('Amp')) < 2
+                d.isHidden = true;
+            end
+        end
+        
         function p = getPreview(obj, panel)
             p = symphonyui.builtin.previews.StimuliPreview(panel, @()createPreviewStimuli(obj));
             function s = createPreviewStimuli(obj)
