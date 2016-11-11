@@ -115,29 +115,33 @@ classdef DeviceConfigurator < symphonyui.ui.Module
                 'Parent', obj.ndfsControls.box, ...
                 'Spacing', 7);
             
-            for i = 1:numel(obj.leds)
-                led = obj.leds{i};
+            devices = obj.leds;
+            if ~isempty(obj.stage)
+                devices = [{} devices {obj.stage}];
+            end
+            for i = 1:numel(devices)
+                device = devices{i};
                 
-                desc = led.getConfigurationSettingDescriptors().findByName('ndfs');
+                desc = device.getConfigurationSettingDescriptors().findByName('ndfs');
                 if isempty(desc)
                     continue;
                 end
                 availableNdfs = desc.type.domain;
                 activeNdfs = desc.value;
                 
-                ledLayout = uix.HBox( ...
+                deviceLayout = uix.HBox( ...
                     'Parent', ndfsLayout, ...
                     'Spacing', 7);
                 Label( ...
-                    'Parent', ledLayout, ...
-                    'String', [led.name ':']);
-                obj.ndfsControls.popupMenus(led.name) = CheckBoxPopupMenu( ...
-                    'Parent', ledLayout, ...
+                    'Parent', deviceLayout, ...
+                    'String', [device.name ':']);
+                obj.ndfsControls.popupMenus(device.name) = CheckBoxPopupMenu( ...
+                    'Parent', deviceLayout, ...
                     'String', availableNdfs, ...
                     'Value', find(cellfun(@(n)any(strcmp(n, activeNdfs)), availableNdfs)), ...
-                    'Callback', @(h,d)obj.onSelectedNdfs(h, struct('led', led, 'ndfs', {h.String(h.Value)})));
+                    'Callback', @(h,d)obj.onSelectedNdfs(h, struct('device', device, 'ndfs', {h.String(h.Value)})));
                 
-                set(ledLayout, 'Widths', [60 -1]);
+                set(deviceLayout, 'Widths', [60 -1]);
             end
             
             set(ndfsLayout, 'Heights', ones(1, numel(ndfsLayout.Children)) * 23);
@@ -147,26 +151,30 @@ classdef DeviceConfigurator < symphonyui.ui.Module
         end
         
         function updateNdfsBox(obj)
-            for i = 1:numel(obj.leds)
-                led = obj.leds{i};
+            devices = obj.leds;
+            if ~isempty(obj.stage)
+                devices = [{} devices {obj.stage}];
+            end
+            for i = 1:numel(devices)
+                device = devices{i};
                 
-                desc = led.getConfigurationSettingDescriptors().findByName('ndfs');
+                desc = device.getConfigurationSettingDescriptors().findByName('ndfs');
                 if isempty(desc)
                     continue;
                 end
                 availableNdfs = desc.type.domain;
                 activeNdfs = desc.value;
                 
-                menu = obj.ndfsControls.popupMenus(led.name);
+                menu = obj.ndfsControls.popupMenus(device.name);
                 set(menu, 'Value', find(cellfun(@(n)any(strcmp(n, activeNdfs)), availableNdfs)));
             end
         end
         
         function onSelectedNdfs(obj, ~, event)
-            led = event.led;
+            device = event.device;
             ndfs = event.ndfs;
             try
-                led.setConfigurationSetting('ndfs', ndfs);
+                device.setConfigurationSetting('ndfs', ndfs);
             catch x
                 obj.view.showError(x.message);
                 obj.updateNdfsBox();
