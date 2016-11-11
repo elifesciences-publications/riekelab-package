@@ -1,12 +1,19 @@
 classdef MicrodisplayControl < symphonyui.ui.Module
     
     properties (Access = private)
+        log
+        settings
         microdisplay
         brightnessPopupMenu
         prerenderCheckbox
     end
     
     methods
+        
+        function obj = MicrodisplayControl()
+            obj.log = log4m.LogManager.getLogger(class(obj));
+            obj.settings = edu.washington.riekelab.modules.settings.MicrodisplayControlSettings();
+        end
         
         function createUi(obj, figureHandle)
             import appbox.*;
@@ -59,6 +66,20 @@ classdef MicrodisplayControl < symphonyui.ui.Module
             obj.microdisplay = devices{1};
             obj.populateBrightnessList();
             obj.populatePrerenderCheckbox();
+            
+            try
+                obj.loadSettings();
+            catch x
+                obj.log.debug(['Failed to load settings: ' x.message], x);
+            end
+        end
+        
+        function willStop(obj)
+            try
+                obj.saveSettings();
+            catch x
+                obj.log.debug(['Failed to save settings: ' x.message], x);
+            end
         end
 
     end
@@ -89,6 +110,17 @@ classdef MicrodisplayControl < symphonyui.ui.Module
         function onSelectedPrerender(obj, ~, ~)
             prerender = get(obj.prerenderCheckbox, 'Value');
             obj.microdisplay.setPrerender(prerender);
+        end
+        
+        function loadSettings(obj)
+            if ~isempty(obj.settings.viewPosition)
+                obj.view.position = obj.settings.viewPosition;
+            end
+        end
+
+        function saveSettings(obj)
+            obj.settings.viewPosition = obj.view.position;
+            obj.settings.save();
         end
         
     end

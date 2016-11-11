@@ -1,6 +1,8 @@
 classdef LightCrafterControl < symphonyui.ui.Module
     
     properties (Access = private)
+        log
+        settings
         lightCrafter
         ledEnablesCheckboxes
         patternRatePopupMenu
@@ -8,6 +10,11 @@ classdef LightCrafterControl < symphonyui.ui.Module
     end
     
     methods
+        
+        function obj = LightCrafterControl()
+            obj.log = log4m.LogManager.getLogger(class(obj));
+            obj.settings = edu.washington.riekelab.modules.settings.LightCrafterControlSettings();
+        end
         
         function createUi(obj, figureHandle)
             import appbox.*;
@@ -91,6 +98,20 @@ classdef LightCrafterControl < symphonyui.ui.Module
             obj.populateLedEnablesCheckboxes();
             obj.populatePatternRateList();
             obj.populatePrerenderCheckbox();
+            
+            try
+                obj.loadSettings();
+            catch x
+                obj.log.debug(['Failed to load settings: ' x.message], x);
+            end
+        end
+        
+        function willStop(obj)
+            try
+                obj.saveSettings();
+            catch x
+                obj.log.debug(['Failed to save settings: ' x.message], x);
+            end
         end
         
     end
@@ -135,6 +156,17 @@ classdef LightCrafterControl < symphonyui.ui.Module
         function onSelectedPrerender(obj, ~, ~)
             prerender = get(obj.prerenderCheckbox, 'Value');
             obj.lightCrafter.setPrerender(prerender);
+        end
+        
+        function loadSettings(obj)
+            if ~isempty(obj.settings.viewPosition)
+                obj.view.position = obj.settings.viewPosition;
+            end
+        end
+
+        function saveSettings(obj)
+            obj.settings.viewPosition = obj.view.position;
+            obj.settings.save();
         end
         
     end
