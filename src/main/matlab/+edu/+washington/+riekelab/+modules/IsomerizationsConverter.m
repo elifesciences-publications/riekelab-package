@@ -2,7 +2,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
     properties (Access = private)
         leds
-        ledListeners
+        stage
+        deviceListeners
         species
         preparation
         preparationListeners
@@ -41,7 +42,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'Spacing', 7);
             Label( ...
                 'Parent', parametersLayout, ...
-                'String', 'LED:');
+                'String', 'Device:');
             Label( ...
                 'Parent', parametersLayout, ...
                 'String', 'NDFs:');
@@ -57,11 +58,11 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             Label( ...
                 'Parent', parametersLayout, ...
                 'String', 'Preparation:');
-            obj.parametersControls.ledPopupMenu = MappedPopupMenu( ...
+            obj.parametersControls.devicePopupMenu = MappedPopupMenu( ...
                 'Parent', parametersLayout, ...
                 'String', {' '}, ...
                 'HorizontalAlignment', 'left', ...
-                'Callback', @obj.onSelectedLed);
+                'Callback', @obj.onSelectedDevice);
             obj.parametersControls.ndfsField = uicontrol( ...
                 'Parent', parametersLayout, ...
                 'Style', 'edit', ...
@@ -90,8 +91,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             Button( ...
                 'Parent', parametersLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
-                'TooltipString', 'LED Help', ...
-                'Callback', @obj.onSelectedLedHelp);
+                'TooltipString', 'Device Help', ...
+                'Callback', @obj.onSelectedDeviceHelp);
             Button( ...
                 'Parent', parametersLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
@@ -139,6 +140,12 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
         function willGo(obj)
             obj.leds = obj.configurationService.getDevices('LED');
+            stages = obj.configurationService.getDevices('Stage');
+            if isempty(stages)
+                obj.stage = [];
+            else
+                obj.stage = stages{1};
+            end
             obj.species = obj.findSpecies();
             obj.preparation = obj.findPreparation();
             
@@ -151,7 +158,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         function bind(obj)
             bind@symphonyui.ui.Module(obj);
 
-            obj.bindLeds();
+            obj.bindDevices();
             obj.bindPreparation();
 
             d = obj.documentationService;
@@ -167,24 +174,32 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
     methods (Access = private)
 
-        function bindLeds(obj)
-            for i = 1:numel(obj.leds)
-                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'AddedConfigurationSetting', @obj.onLedChangedConfigurationSetting);
-                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'SetConfigurationSetting', @obj.onLedChangedConfigurationSetting);
-                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'RemovedConfigurationSetting', @obj.onLedChangedConfigurationSetting);
-                obj.ledListeners{end + 1} = obj.addListener(obj.leds{i}, 'AddedResource', @obj.onLedAddedResource);
+        function bindDevices(obj)
+            d = obj.allDevices;
+            for i = 1:numel(d)
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'AddedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'SetConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'RemovedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'AddedResource', @obj.onDeviceAddedResource);
             end
         end
 
-        function unbindLeds(obj)
-            while ~isempty(obj.ledListeners)
-                obj.removeListener(obj.ledListeners{1});
-                obj.ledListeners(1) = [];
+        function unbindDevices(obj)
+            while ~isempty(obj.deviceListeners)
+                obj.removeListener(obj.deviceListeners{1});
+                obj.deviceListeners(1) = [];
+            end
+        end
+        
+        function d = allDevices(obj)
+            d = obj.leds;
+            if ~isempty(obj.stage)
+                d = [{} d {obj.stage}];
             end
         end
         
         function populateParametersBox(obj)
-            obj.populateLedList();
+            obj.populateDeviceList();
             obj.populateNdfs();
             obj.populateGain();
             obj.populateLightPath();
@@ -192,23 +207,24 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.populatePreparation();
         end
 
-        function populateLedList(obj)
-            names = cell(1, numel(obj.leds));
-            for i = 1:numel(obj.leds)
-                names{i} = obj.leds{i}.name;
+        function populateDeviceList(obj)
+            devices = obj.allDevices;
+            names = cell(1, numel(devices));
+            for i = 1:numel(devices)
+                names{i} = devices{i}.name;
             end
 
-            if numel(obj.leds) > 0
-                set(obj.parametersControls.ledPopupMenu, 'String', names);
-                set(obj.parametersControls.ledPopupMenu, 'Values', obj.leds);
+            if numel(devices) > 0
+                set(obj.parametersControls.devicePopupMenu, 'String', names);
+                set(obj.parametersControls.devicePopupMenu, 'Values', devices);
             else
-                set(obj.parametersControls.ledPopupMenu, 'String', {' '});
-                set(obj.parametersControls.ledPopupMenu, 'Values', {[]});
+                set(obj.parametersControls.devicePopupMenu, 'String', {' '});
+                set(obj.parametersControls.devicePopupMenu, 'Values', {[]});
             end
-            set(obj.parametersControls.ledPopupMenu, 'Enable', appbox.onOff(numel(obj.leds) > 0));
+            set(obj.parametersControls.devicePopupMenu, 'Enable', appbox.onOff(numel(devices) > 0));
         end
 
-        function onSelectedLed(obj, ~, ~)
+        function onSelectedDevice(obj, ~, ~)
             obj.populateNdfs();
             obj.populateGain();
             obj.populateLightPath();
@@ -216,56 +232,56 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.pack();
         end
 
-        function onSelectedLedHelp(obj, ~, ~)
-            obj.view.showMessage(['Select the LED for which to perform isomerizations conversions. This popup menu ' ...
-                'is populated based on the LEDs in the currently initialized rig.'], 'LED Help');
+        function onSelectedDeviceHelp(obj, ~, ~)
+            obj.view.showMessage(['Select the device for which to perform isomerizations conversions. This popup menu ' ...
+                'is populated based on the devices in the currently initialized rig.'], 'Device Help');
         end
 
         function populateNdfs(obj)
-            led = get(obj.parametersControls.ledPopupMenu, 'Value');
-            if isempty(led)
+            device = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(device)
                 set(obj.parametersControls.ndfsField, 'String', '');
             else
-                ndfs = led.getConfigurationSetting('ndfs');
+                ndfs = device.getConfigurationSetting('ndfs');
                 set(obj.parametersControls.ndfsField, 'String', strjoin(ndfs, '; '));
             end
         end
 
         function onSelectedNdfsHelp(obj, ~, ~)
             obj.view.showMessage(['The ndfs field is auto-populated by the value of the ''ndfs'' configuration ' ...
-                'setting on the selected LED. Device configuration settings may be changed through the ''Device ' ...
+                'setting on the selected device. Device configuration settings may be changed through the ''Device ' ...
                 'Configurator'' module.'], 'NDFs Help');
         end
 
         function populateGain(obj)
-            led = get(obj.parametersControls.ledPopupMenu, 'Value');
-            if isempty(led)
+            device = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(device) || device == obj.stage
                 set(obj.parametersControls.gainField, 'String', '');
             else
-                gain = led.getConfigurationSetting('gain');
+                gain = device.getConfigurationSetting('gain');
                 set(obj.parametersControls.gainField, 'String', gain);
             end
         end
 
         function onSelectedGainHelp(obj, ~, ~)
             obj.view.showMessage(['The gain field is auto-populated by the value of the ''gain'' configuration ' ...
-                'setting on the selected LED. Device configuration settings may be changed through the ''Device ' ...
+                'setting on the selected device. Device configuration settings may be changed through the ''Device ' ...
                 'Configurator'' module.'], 'Gain Help');
         end
         
         function populateLightPath(obj)
-            led = get(obj.parametersControls.ledPopupMenu, 'Value');
-            if isempty(led)
+            device = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(device)
                 set(obj.parametersControls.lightPathField, 'String', '');
             else
-                path = led.getConfigurationSetting('lightPath');
+                path = device.getConfigurationSetting('lightPath');
                 set(obj.parametersControls.lightPathField, 'String', path);
             end
         end
 
         function onSelectedLightPathHelp(obj, ~, ~)
             obj.view.showMessage(['The light path field is auto-populated by the value of the ''lightPath'' configuration ' ...
-                'setting on the selected LED. Device configuration settings may be changed through the ''Device ' ...
+                'setting on the selected device. Device configuration settings may be changed through the ''Device ' ...
                 'Configurator'' module.'], 'Light Path Help');
         end
 
@@ -414,24 +430,24 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         
         function [tf, msg] = isValid(obj)
             msg = '';
-            led = get(obj.parametersControls.ledPopupMenu, 'Value');
-            if isempty(led)
-                msg = 'LED must not be empty';
-            elseif ~any(strcmp('spectrum', led.getResourceNames()))
-                msg = 'LED is missing spectrum';
-            elseif ~any(strcmp('ndfAttenuations', led.getResourceNames()))
-                msg = 'LED is missing ndf attentuations';
-            elseif ~any(strcmp('fluxFactors', led.getResourceNames()))
-                msg = 'LED must be calibrated';
-            elseif ~led.hasConfigurationSetting('ndfs')
-                msg = 'LED is missing ndfs setting';
-            elseif ~led.hasConfigurationSetting('gain')
-                msg = 'LED is missing gain setting';
-            elseif isempty(led.getConfigurationSetting('gain'))
+            device = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(device)
+                msg = 'Device must not be empty';
+            elseif ~any(strcmp('spectrum', device.getResourceNames()))
+                msg = 'Device is missing spectrum';
+            elseif ~any(strcmp('ndfAttenuations', device.getResourceNames()))
+                msg = 'Device is missing ndf attentuations';
+            elseif ~any(strcmp('fluxFactors', device.getResourceNames()))
+                msg = 'Device must be calibrated';
+            elseif ~device.hasConfigurationSetting('ndfs')
+                msg = 'Device is missing ndfs setting';
+            elseif device ~= obj.stage && ~device.hasConfigurationSetting('gain')
+                msg = 'Device is missing gain setting';
+            elseif device ~= obj.stage && isempty(device.getConfigurationSetting('gain'))
                 msg = 'Gain must not be empty';
-            elseif ~led.hasConfigurationSetting('lightPath')
-                msg = 'LED is missing light path setting';
-            elseif isempty(led.getConfigurationSetting('lightPath'))
+            elseif ~device.hasConfigurationSetting('lightPath')
+                msg = 'Device is missing light path setting';
+            elseif isempty(device.getConfigurationSetting('lightPath'))
                 msg = 'Light path must not be empty';
             elseif isempty(obj.species)
                 msg = 'Species must not be empty';
@@ -449,13 +465,13 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
             value = char(field.jcontrol.getText());
             
-            led = get(obj.parametersControls.ledPopupMenu, 'Value');
-            spectrum = led.getResource('spectrum');
-            attenuations = led.getResource('ndfAttenuations');
-            fluxFactors = led.getResource('fluxFactors');
-            ndfs = led.getConfigurationSetting('ndfs');
-            gain = led.getConfigurationSetting('gain');
-            path = led.getConfigurationSetting('lightPath');
+            device = get(obj.parametersControls.devicePopupMenu, 'Value');
+            spectrum = device.getResource('spectrum');
+            attenuations = device.getResource('ndfAttenuations');
+            fluxFactors = device.getResource('fluxFactors');
+            ndfs = device.getConfigurationSetting('ndfs');
+            gain = device.getConfigurationSetting('gain');
+            path = device.getConfigurationSetting('lightPath');
             photoreceptors = obj.species.getResource('photoreceptors');
             prep = obj.preparation.getProperty('preparation');
             orientations = obj.preparation.getResource('photoreceptorOrientations');
@@ -517,8 +533,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             set(f, 'Position', [p(1) p(2)+delta p(3) h]);
         end
         
-        function onLedChangedConfigurationSetting(obj, handle, event)
-            if handle ~= get(obj.parametersControls.ledPopupMenu, 'Value')
+        function onDeviceChangedConfigurationSetting(obj, handle, event)
+            if handle ~= get(obj.parametersControls.devicePopupMenu, 'Value')
                 return;
             end
             
@@ -532,8 +548,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
         end
         
-        function onLedAddedResource(obj, handle, event)
-            if handle ~= get(obj.parametersControls.ledPopupMenu, 'Value')
+        function onDeviceAddedResource(obj, handle, event)
+            if handle ~= get(obj.parametersControls.devicePopupMenu, 'Value')
                 return;
             end
             
@@ -586,15 +602,21 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function onServiceInitializedRig(obj, ~, ~)
-            obj.unbindLeds();
+            obj.unbindDevices();
             obj.leds = obj.configurationService.getDevices('LED');
+            stages = obj.configurationService.getDevices('Stage');
+            if isempty(stages)
+                obj.stage = [];
+            else
+                obj.stage = stages{1};
+            end
             
             obj.populateParametersBox();
             obj.populateConverterBox();
             
             obj.pack();
             
-            obj.bindLeds();
+            obj.bindDevices();
         end
 
     end

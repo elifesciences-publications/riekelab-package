@@ -88,14 +88,11 @@ classdef DeviceConfigurator < symphonyui.ui.Module
     methods (Access = private)
         
         function bindDevices(obj)
-            devices = obj.leds;
-            if ~isempty(obj.stage)
-                devices = [{} devices {obj.stage}];
-            end
-            for i = 1:numel(devices)
-                obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'AddedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
-                obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'SetConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
-                obj.deviceListeners{end + 1} = obj.addListener(devices{i}, 'RemovedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+            d = obj.allDevices;
+            for i = 1:numel(d)
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'AddedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'SetConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'RemovedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
             end
         end
         
@@ -103,6 +100,13 @@ classdef DeviceConfigurator < symphonyui.ui.Module
             while ~isempty(obj.deviceListeners)
                 obj.removeListener(obj.deviceListeners{1});
                 obj.deviceListeners(1) = [];
+            end
+        end
+        
+        function d = allDevices(obj)
+            d = obj.leds;
+            if ~isempty(obj.stage)
+                d = [{} d {obj.stage}];
             end
         end
         
@@ -115,12 +119,8 @@ classdef DeviceConfigurator < symphonyui.ui.Module
                 'Parent', obj.ndfsControls.box, ...
                 'Spacing', 7);
             
-            devices = obj.leds;
-            if ~isempty(obj.stage)
-                devices = [{} devices {obj.stage}];
-            end
-            for i = 1:numel(devices)
-                device = devices{i};
+            for i = 1:numel(obj.allDevices)
+                device = obj.allDevices{i};
                 
                 desc = device.getConfigurationSettingDescriptors().findByName('ndfs');
                 if isempty(desc)
@@ -151,12 +151,8 @@ classdef DeviceConfigurator < symphonyui.ui.Module
         end
         
         function updateNdfsBox(obj)
-            devices = obj.leds;
-            if ~isempty(obj.stage)
-                devices = [{} devices {obj.stage}];
-            end
-            for i = 1:numel(devices)
-                device = devices{i};
+            for i = 1:numel(obj.allDevices)
+                device = obj.allDevices{i};
                 
                 desc = device.getConfigurationSettingDescriptors().findByName('ndfs');
                 if isempty(desc)
