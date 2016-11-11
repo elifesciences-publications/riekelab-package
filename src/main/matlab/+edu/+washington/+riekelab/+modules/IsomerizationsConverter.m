@@ -501,7 +501,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 collectingArea = getCollectingArea(photoreceptors(event.fieldName).collectingArea, path, orientation);
                 volts = edu.washington.riekelab.util.convisom(isom, 'isom', fluxFactors(gain), spectrum, ...
                     photoreceptors(event.fieldName).spectrum, collectingArea, ndfs, attenuations);
-                set(obj.converterControls.fields('volts').control, 'String', num2str(volts));
+                set(obj.converterControls.fields('volts').control, 'String', num2str(volts, '%.4f'));
             end
             
             names = photoreceptors.keys;
@@ -511,7 +511,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 collectingArea = getCollectingArea(photoreceptors(n).collectingArea, path, orientation);
                 isom = edu.washington.riekelab.util.convisom(volts, 'volts', fluxFactors(gain), spectrum, ...
                     photoreceptors(n).spectrum, collectingArea, ndfs, attenuations);
-                set(obj.converterControls.fields(n).control, 'String', num2str(round(isom)));
+                set(obj.converterControls.fields(n).control, 'String', num2str(isom, '%.0f'));
             end
         end
         
