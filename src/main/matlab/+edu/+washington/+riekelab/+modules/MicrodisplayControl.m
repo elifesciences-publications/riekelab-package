@@ -65,7 +65,7 @@ classdef MicrodisplayControl < symphonyui.ui.Module
             
             obj.microdisplay = devices{1};
             obj.populateBrightnessList();
-            obj.populatePrerenderCheckbox();
+            obj.populatePrerender();
             
             try
                 obj.loadSettings();
@@ -103,7 +103,7 @@ classdef MicrodisplayControl < symphonyui.ui.Module
             obj.microdisplay.setBrightness(brightness);
         end
         
-        function populatePrerenderCheckbox(obj)
+        function populatePrerender(obj)
             set(obj.prerenderCheckbox, 'Value', obj.microdisplay.getPrerender());
         end
         
