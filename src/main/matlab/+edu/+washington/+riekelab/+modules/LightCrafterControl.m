@@ -198,7 +198,9 @@ classdef LightCrafterControl < symphonyui.ui.Module
         
         function loadSettings(obj)
             if ~isempty(obj.settings.viewPosition)
-                obj.view.position = obj.settings.viewPosition;
+                p1 = obj.view.position;
+                p2 = obj.settings.viewPosition;
+                obj.view.position = [p2(1) p2(2) p1(3) p1(4)];
             end
         end
 
