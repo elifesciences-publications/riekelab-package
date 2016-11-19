@@ -39,6 +39,7 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             
             obj.addConfigurationSetting('canvasSize', canvasSize, 'isReadOnly', true);
             obj.addConfigurationSetting('trueCanvasSize', trueCanvasSize, 'isReadOnly', true);
+            obj.addConfigurationSetting('centerOffset', [0 0], 'isReadOnly', true);
             obj.addConfigurationSetting('monitorRefreshRate', obj.stageClient.getMonitorRefreshRate(), 'isReadOnly', true);
             obj.addConfigurationSetting('prerender', false, 'isReadOnly', true);
             obj.addConfigurationSetting('microdisplayBrightness', char(brightness), 'isReadOnly', true);
@@ -64,6 +65,16 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             s = obj.getConfigurationSetting('trueCanvasSize');
         end
         
+        function setCenterOffset(obj, o)
+            delta = o - obj.getCenterOffset();
+            obj.stageClient.setCanvasProjectionTranslate(delta(1), delta(2), 0);
+            obj.setReadOnlyConfigurationSetting('centerOffset', [o(1) o(2)]);
+        end
+        
+        function o = getCenterOffset(obj)
+            o = obj.getConfigurationSetting('centerOffset');
+        end
+        
         function r = getMonitorRefreshRate(obj)
             r = obj.getConfigurationSetting('monitorRefreshRate');
         end
@@ -78,17 +89,18 @@ classdef MicrodisplayDevice < symphonyui.core.Device
         
         function play(obj, presentation)
             canvasSize = obj.getCanvasSize();
+            centerOffset = obj.getCenterOffset();
             
             background = stage.builtin.stimuli.Rectangle();
             background.size = canvasSize;
-            background.position = canvasSize/2;
+            background.position = canvasSize/2 - centerOffset;
             background.color = presentation.backgroundColor;
             presentation.setBackgroundColor(0);
             presentation.insertStimulus(1, background);
             
             tracker = stage.builtin.stimuli.FrameTracker();
             tracker.size = canvasSize;
-            tracker.position = [canvasSize(1) + (canvasSize(1)/2), canvasSize(2)/2];
+            tracker.position = [canvasSize(1) + (canvasSize(1)/2), canvasSize(2)/2] - centerOffset;
             presentation.addStimulus(tracker);
             
             trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)double(s.time + (1/s.frameRate) < presentation.duration));
@@ -146,6 +158,11 @@ classdef MicrodisplayDevice < symphonyui.core.Device
         function p = um2pix(obj, um)
             micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
             p = round(um / micronsPerPixel);
+        end
+        
+        function u = pix2um(obj, pix)
+            micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
+            u = pix * micronsPerPixel;
         end
         
     end
