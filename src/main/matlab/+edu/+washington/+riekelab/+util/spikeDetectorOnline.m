@@ -20,13 +20,13 @@ function results = spikeDetectorOnline(data, threshold, sampleRate)
     refPeriod = 2E-3; % s
     refPeriodPoints = round(refPeriod./sampleInterval); % data points
 
-    nTraces = size(data);
+    [nTraces, ~] = size(data);
     dataHighpass = edu.washington.riekelab.util.highPassFilter(data, highPassCutSpikes, sampleInterval);
 
     % Initialize output stuff
-    sp = cell(nTraces,1);
-    spikeAmps = cell(nTraces,1);
-    violationInd = cell(nTraces,1);
+    sp = cell(nTraces, 1);
+    spikeAmps = cell(nTraces, 1);
+    violationInd = cell(nTraces, 1);
 
     for i=1:nTraces
         % Get the trace

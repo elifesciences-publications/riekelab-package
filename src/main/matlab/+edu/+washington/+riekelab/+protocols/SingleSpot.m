@@ -3,13 +3,12 @@ classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
     
     properties
         amp                             % Output amplifier
-        preTime = 500                   % Spot leading duration (ms)
-        stimTime = 1000                 % Spot duration (ms)
-        tailTime = 500                  % Spot trailing duration (ms)
+        preTime = 250                   % Spot leading duration (ms)
+        stimTime = 250                  % Spot duration (ms)
+        tailTime = 250                  % Spot trailing duration (ms)
         spotIntensity = 1.0             % Spot light intensity (0-1)
         spotDiameter = 300              % Spot diameter size (um)
         backgroundIntensity = 0.5       % Background light intensity (0-1)
-        centerOffset = [0, 0]           % Spot center offset [x, y] (um)
         numberOfAverages = uint16(5)    % Number of epochs
         interpulseInterval = 0          % Duration between spots (s)
     end
@@ -39,7 +38,7 @@ classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
             prepareRun@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
-            obj.showFigure('symphonyui.builtin.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp));
+            obj.showFigure('edu.washington.riekelab.figures.MeanResponseFigure', obj.rig.getDevice(obj.amp), 'psth', true);
             obj.showFigure('edu.washington.riekelab.figures.FrameTimingFigure', obj.rig.getDevice('Stage'), obj.rig.getDevice('Frame Monitor'));
         end
         
@@ -48,7 +47,6 @@ classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
             canvasSize = device.getCanvasSize();
             
             spotDiameterPix = device.um2pix(obj.spotDiameter);
-            centerOffsetPix = device.um2pix(obj.centerOffset);
             
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * 1e-3);
             p.setBackgroundColor(obj.backgroundIntensity);
@@ -57,7 +55,7 @@ classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
             spot.color = obj.spotIntensity;
             spot.radiusX = spotDiameterPix/2;
             spot.radiusY = spotDiameterPix/2;
-            spot.position = canvasSize/2 + centerOffsetPix;
+            spot.position = canvasSize/2;
             p.addStimulus(spot);
             
             spotVisible = stage.builtin.controllers.PropertyController(spot, 'visible', ...
@@ -79,6 +77,15 @@ classdef SingleSpot < edu.washington.riekelab.protocols.RiekeLabStageProtocol
             
             device = obj.rig.getDevice(obj.amp);
             interval.addDirectCurrentStimulus(device, device.background, obj.interpulseInterval, obj.sampleRate);
+        end
+        
+        function controllerDidStartHardware(obj)
+            controllerDidStartHardware@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
+            if obj.numEpochsPrepared == 1
+                obj.rig.getDevice('Stage').play(obj.createPresentation());
+            else
+                obj.rig.getDevice('Stage').replay();
+            end
         end
         
         function tf = shouldContinuePreparingEpochs(obj)
