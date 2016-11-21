@@ -31,9 +31,9 @@ classdef MeanResponseFigure < symphonyui.core.FigureHandler
             obj.sweepColor = ip.Results.sweepColor;
             obj.storedSweepColor = ip.Results.storedSweepColor;
             obj.psth = ip.Results.psth;
-            
+
             obj.createUi();
-            
+
             stored = obj.storedSweeps();
             for i = 1:numel(stored)
                 stored{i}.line = line(stored{i}.x, stored{i}.y, ...
@@ -54,7 +54,7 @@ classdef MeanResponseFigure < symphonyui.core.FigureHandler
                 'Separator', 'on', ...
                 'ClickedCallback', @obj.onSelectedStoreSweeps);
             setIconImage(storeSweepsButton, symphonyui.app.App.getResource('icons', 'sweep_store.png'));
-            
+
             clearSweepsButton = uipushtool( ...
                 'Parent', toolbar, ...
                 'TooltipString', 'Clear Sweeps', ...
@@ -94,7 +94,7 @@ classdef MeanResponseFigure < symphonyui.core.FigureHandler
                 if obj.psth
                     sigma = 15e-3 * sampleRate;
                     filter = normpdf(1:10*sigma, 10*sigma/2, sigma);
-                    results = edu.washington.riekelab.turner.utils.spikeDetectorOnline(y, [], sampleRate);
+                    results = edu.washington.riekelab.util.spikeDetectorOnline(y, [], sampleRate);
                     y = zeros(size(y));
                     y(results.sp) = 1;
                     y = sampleRate * conv(y, filter, 'same');
@@ -160,10 +160,10 @@ classdef MeanResponseFigure < symphonyui.core.FigureHandler
         function onSelectedStoreSweeps(obj, ~, ~)
             obj.storeSweeps();
         end
-        
+
         function storeSweeps(obj)
             obj.clearSweeps();
-            
+
             store = obj.sweeps;
             for i = 1:numel(obj.sweeps)
                 store{i}.line = copyobj(obj.sweeps{i}.line, obj.axesHandle);
@@ -173,22 +173,22 @@ classdef MeanResponseFigure < symphonyui.core.FigureHandler
             end
             obj.storedSweeps(store);
         end
-        
+
         function onSelectedClearSweeps(obj, ~, ~)
             obj.clearSweeps();
         end
-        
+
         function clearSweeps(obj)
             stored = obj.storedSweeps();
             for i = 1:numel(stored)
                 delete(stored{i}.line);
             end
-            
+
             obj.storedSweeps([]);
         end
 
     end
-    
+
     methods (Static)
 
         function sweeps = storedSweeps(sweeps)
