@@ -6,7 +6,10 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         leds
         stage
         deviceListeners
+        epochGroup
+        epochGroupListeners
         species
+        speciesListeners
         preparation
         preparationListeners
     end
@@ -153,6 +156,11 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             else
                 obj.stage = stages{1};
             end
+            if obj.documentationService.hasOpenFile()
+                obj.epochGroup = obj.documentationService.getCurrentEpochGroup();
+            else
+                obj.epochGroup = [];
+            end
             obj.species = obj.findSpecies();
             obj.preparation = obj.findPreparation();
             
@@ -180,6 +188,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             bind@symphonyui.ui.Module(obj);
 
             obj.bindDevices();
+            obj.bindEpochGroup();
+            obj.bindSpecies();
             obj.bindPreparation();
 
             d = obj.documentationService;
@@ -229,20 +239,22 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function populateDeviceList(obj)
-            devices = obj.allDevices;
-            names = cell(1, numel(devices));
-            for i = 1:numel(devices)
-                names{i} = devices{i}.name;
+            names = {};
+            values = {};
+            for i = 1:numel(obj.allDevices)
+                device = obj.allDevices{i};
+                names{end + 1} = device.name;
+                values{end + 1} = device;
             end
 
-            if numel(devices) > 0
+            if numel(obj.allDevices) > 0
                 set(obj.parametersControls.devicePopupMenu, 'String', names);
-                set(obj.parametersControls.devicePopupMenu, 'Values', devices);
+                set(obj.parametersControls.devicePopupMenu, 'Values', values);
             else
                 set(obj.parametersControls.devicePopupMenu, 'String', {' '});
                 set(obj.parametersControls.devicePopupMenu, 'Values', {[]});
             end
-            set(obj.parametersControls.devicePopupMenu, 'Enable', appbox.onOff(numel(devices) > 0));
+            set(obj.parametersControls.devicePopupMenu, 'Enable', appbox.onOff(numel(obj.allDevices) > 0));
         end
 
         function onSelectedDevice(obj, ~, ~)
@@ -305,7 +317,40 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'setting on the selected device. Device configuration settings may be changed through the ''Device ' ...
                 'Configurator'' module.'], 'Light Path Help');
         end
-
+        
+        function bindEpochGroup(obj)
+            if ~obj.documentationService.hasOpenFile()
+                return;
+            end
+            group = obj.documentationService.getCurrentEpochGroup();
+            if ~isempty(group)
+                obj.epochGroupListeners{end + 1} = obj.addListener(group, 'source', 'PostSet', @obj.onEpochGroupSetSource);
+            end
+        end
+        
+        function unbindEpochGroup(obj)
+            while ~isempty(obj.epochGroupListeners)
+                obj.removeListener(obj.epochGroupListeners{1});
+                obj.epochGroupListeners(1) = [];
+            end
+        end
+        
+        function onEpochGroupSetSource(obj, ~, ~)
+            obj.unbindSpecies();
+            obj.species = obj.findSpecies();
+            obj.bindSpecies();
+            
+            obj.unbindPreparation();
+            obj.preparation = obj.findPreparation();
+            obj.bindPreparation();
+            
+            obj.populateSpecies();
+            obj.populatePreparation();
+            obj.populateConverterBox();
+            
+            obj.pack();
+        end
+        
         function populateSpecies(obj)
             if isempty(obj.species)
                 set(obj.parametersControls.speciesField, 'String', '');
@@ -316,20 +361,32 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
         function s = findSpecies(obj)
             s = [];
-            if ~obj.documentationService.hasOpenFile()
+            if isempty(obj.epochGroup)
                 return;
             end
 
-            group = obj.documentationService.getCurrentEpochGroup();
-            if isempty(group)
-                return;
-            end
-
-            source = group.source;
+            source = obj.epochGroup.source;
             while ~isempty(source) && ~any(strcmp(source.getResourceNames(), 'photoreceptors'))
                 source = source.parent;
             end
             s = source;
+        end
+        
+        function bindSpecies(obj)
+            if ~isempty(obj.species)
+                obj.speciesListeners{end + 1} = obj.addListener(obj.species, 'label', 'PostSet', @obj.onSpeciesSetLabel);
+            end
+        end
+        
+        function unbindSpecies(obj)
+            while ~isempty(obj.speciesListeners)
+                obj.removeListener(obj.speciesListeners{1});
+                obj.speciesListeners(1) = [];
+            end
+        end
+        
+        function onSpeciesSetLabel(obj, ~, ~)
+            obj.populateSpecies();
         end
 
         function onSelectedSpeciesHelp(obj, ~, ~)
@@ -347,16 +404,11 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
         function s = findPreparation(obj)
             s = [];
-            if ~obj.documentationService.hasOpenFile()
+            if isempty(obj.epochGroup)
                 return;
             end
 
-            group = obj.documentationService.getCurrentEpochGroup();
-            if isempty(group)
-                return;
-            end
-
-            source = group.source;
+            source = obj.epochGroup.source;
             while ~isempty(source) ...
                     && isempty(source.getPropertyDescriptors().findByName('preparation')) ...
                     && ~any(strcmp(source.getResourceNames(), 'photoreceptorOrientations'))
@@ -582,7 +634,13 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function onServiceBeganEpochGroup(obj, ~, ~)
+            obj.unbindEpochGroup();
+            obj.epochGroup = obj.documentationService.getCurrentEpochGroup();
+            obj.bindEpochGroup();
+            
+            obj.unbindSpecies();
             obj.species = obj.findSpecies();
+            obj.bindSpecies();
             
             obj.unbindPreparation();
             obj.preparation = obj.findPreparation();
@@ -595,8 +653,14 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.pack();
         end
 
-        function onServiceEndedEpochGroup(obj, ~, ~)           
+        function onServiceEndedEpochGroup(obj, ~, ~)
+            obj.unbindEpochGroup();
+            obj.epochGroup = obj.documentationService.getCurrentEpochGroup();
+            obj.bindEpochGroup();
+            
+            obj.unbindSpecies();
             obj.species = obj.findSpecies();
+            obj.bindSpecies();
             
             obj.unbindPreparation();
             obj.preparation = obj.findPreparation();
@@ -609,7 +673,11 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             obj.pack();
         end
 
-        function onServiceClosedFile(obj, ~, ~)            
+        function onServiceClosedFile(obj, ~, ~)
+            obj.unbindEpochGroup();
+            obj.epochGroup = [];
+            
+            obj.unbindSpecies();
             obj.species = [];
             
             obj.unbindPreparation();
