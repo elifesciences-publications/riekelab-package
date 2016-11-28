@@ -1,5 +1,5 @@
 function output = convisom(input, inputUnits, calibration, deviceSpectrum, photoreceptorSpectrum, collectingArea, ndfs, attenuations)
-    % Convert isomerizations to volts or vice versa.
+    % Convert isomerizations to intensity (volts or normalized) or vice versa.
 
     % Calculate attentuation factor (scale of 0 to 1, with 0 total attenuation).
     ndfAttenuation = calcNdfAttenuation(ndfs, attenuations);
@@ -13,22 +13,23 @@ function output = convisom(input, inputUnits, calibration, deviceSpectrum, photo
     % Account for NDFs.
     isomPerWatt = isomPerWatt * ndfAttenuation;
 
-    % Calibration values are in (nanowatts/volt)/(square micron); collecting area should be in units of square microns, 
-    % so microwatts/volt seen by the given photoreceptor should be (calibration value) * (collecting area).
-    nanoWattsPerVolt = calibration * collectingArea;
-    wattsPerVolt = nanoWattsPerVolt * (10^-9);
+    % Calibration values are in (nanowatts/intensity)/(square micron) where intensity is volts or normalized; collecting 
+    % area should be in units of square microns, so microwatts/intensity seen by the given photoreceptor should be 
+    % (calibration value) * (collecting area).
+    nanoWattsPerIntensity = calibration * collectingArea;
+    wattsPerIntensity = nanoWattsPerIntensity * (10^-9);
 
     if strcmpi(inputUnits, 'isom')
         % Get the number of watts that will be necessary to achieve desired isomerization rate.
         wattsNeeded = input / isomPerWatt;
 
-        % Calculate the voltage necessary.
-        output = wattsNeeded / wattsPerVolt;
-    elseif strcmpi(inputUnits, 'volts')
-        % Figure out watts at this voltage.
-        output = input * wattsPerVolt * isomPerWatt;
+        % Calculate the intensity necessary.
+        output = wattsNeeded / wattsPerIntensity;
+    elseif any(strcmpi(inputUnits, {'volts', 'intensity'}))
+        % Figure out watts at this intensity.
+        output = input * wattsPerIntensity * isomPerWatt;
     else
-        error('Input units must be ''isom'' or ''volts''');
+        error('Input units must be ''isom'' or ''volts'' or ''intensity''');
     end
 end
 
