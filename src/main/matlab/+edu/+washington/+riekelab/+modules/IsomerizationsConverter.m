@@ -47,90 +47,141 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'FontName', get(figureHandle, 'DefaultUicontrolFontName'), ...
                 'FontSize', get(figureHandle, 'DefaultUicontrolFontSize'), ...
                 'Padding', 11);
-            parametersLayout = uix.Grid( ...
+            
+            parametersLayout = uix.VBox( ...
                 'Parent', obj.parametersControls.box, ...
                 'Spacing', 7);
-            Label( ...
+            
+            deviceLayout = uix.HBox( ...
                 'Parent', parametersLayout, ...
+                'Spacing', 7);
+            Label( ...
+                'Parent', deviceLayout, ...
                 'String', 'Device:');
-            Label( ...
-                'Parent', parametersLayout, ...
-                'String', 'NDFs:');
-            Label( ...
-                'Parent', parametersLayout, ...
-                'String', 'Gain:');
-            Label( ...
-                'Parent', parametersLayout, ...
-                'String', 'Light Path:');
-            Label( ...
-                'Parent', parametersLayout, ...
-                'String', 'Species:');
-            Label( ...
-                'Parent', parametersLayout, ...
-                'String', 'Preparation:');
             obj.parametersControls.devicePopupMenu = MappedPopupMenu( ...
-                'Parent', parametersLayout, ...
+                'Parent', deviceLayout, ...
                 'String', {' '}, ...
                 'HorizontalAlignment', 'left', ...
                 'Callback', @obj.onSelectedDevice);
-            obj.parametersControls.ndfsField = uicontrol( ...
-                'Parent', parametersLayout, ...
-                'Style', 'edit', ...
-                'HorizontalAlignment', 'left', ...
-                'Enable', 'off');
-            obj.parametersControls.gainField = uicontrol( ...
-                'Parent', parametersLayout, ...
-                'Style', 'edit', ...
-                'HorizontalAlignment', 'left', ...
-                'Enable', 'off');
-            obj.parametersControls.lightPathField = uicontrol( ...
-                'Parent', parametersLayout, ...
-                'Style', 'edit', ...
-                'HorizontalAlignment', 'left', ...
-                'Enable', 'off');
-            obj.parametersControls.speciesField = uicontrol( ...
-                'Parent', parametersLayout, ...
-                'Style', 'edit', ...
-                'HorizontalAlignment', 'left', ...
-                'Enable', 'off');
-            obj.parametersControls.preparationField = uicontrol( ...
-                'Parent', parametersLayout, ...
-                'Style', 'edit', ...
-                'HorizontalAlignment', 'left', ...
-                'Enable', 'off');
             Button( ...
-                'Parent', parametersLayout, ...
+                'Parent', deviceLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
                 'TooltipString', 'Device Help', ...
                 'Callback', @obj.onSelectedDeviceHelp);
-            Button( ...
+            set(deviceLayout, 'Widths', [70 -1 22]);
+            
+            ndfsLayout = uix.HBox( ...
                 'Parent', parametersLayout, ...
+                'Spacing', 7);
+            Label( ...
+                'Parent', ndfsLayout, ...
+                'String', 'NDFs:');
+            obj.parametersControls.ndfsField = uicontrol( ...
+                'Parent', ndfsLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Enable', 'off');
+            Button( ...
+                'Parent', ndfsLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
                 'TooltipString', 'NDFs Help', ...
                 'Callback', @obj.onSelectedNdfsHelp);
+            set(ndfsLayout, 'Widths', [70 -1 22]);
+            
+            obj.parametersControls.settingCardPanel = uix.CardPanel( ...
+                'Parent', parametersLayout);
+            
+            gainLayout = uix.HBox( ...
+                'Parent', obj.parametersControls.settingCardPanel, ...
+                'Spacing', 7);
+            Label( ...
+                'Parent', gainLayout, ...
+                'String', 'Gain:');
+            obj.parametersControls.gainField = uicontrol( ...
+                'Parent', gainLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Enable', 'off');
             Button( ...
-                'Parent', parametersLayout, ...
+                'Parent', gainLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
                 'TooltipString', 'Gain Help', ...
                 'Callback', @obj.onSelectedGainHelp);
+            set(gainLayout, 'Widths', [70 -1 22]);
+            
+            brightnessLayout = uix.HBox( ...
+                'Parent', obj.parametersControls.settingCardPanel, ...
+                'Spacing', 7);
+            Label( ...
+                'Parent', brightnessLayout, ...
+                'String', 'Brightness:');
+            obj.parametersControls.brightnessField = uicontrol( ...
+                'Parent', brightnessLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Enable', 'off');
             Button( ...
+                'Parent', brightnessLayout, ...
+                'Icon', App.getResource('icons', 'help.png'), ...
+                'TooltipString', 'Brightness Help', ...
+                'Callback', @obj.onSelectedBrightnessHelp);
+            set(brightnessLayout, 'Widths', [70 -1 22]);
+            
+            pathLayout = uix.HBox( ...
                 'Parent', parametersLayout, ...
+                'Spacing', 7);
+            Label( ...
+                'Parent', pathLayout, ...
+                'String', 'Light Path:');
+            obj.parametersControls.lightPathField = uicontrol( ...
+                'Parent', pathLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Enable', 'off');
+            Button( ...
+                'Parent', pathLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
                 'TooltipString', 'Light Path Help', ...
                 'Callback', @obj.onSelectedLightPathHelp);
-            Button( ...
+            set(pathLayout, 'Widths', [70 -1 22]);
+            
+            speciesLayout = uix.HBox( ...
                 'Parent', parametersLayout, ...
+                'Spacing', 7);
+            Label( ...
+                'Parent', speciesLayout, ...
+                'String', 'Species:');
+            obj.parametersControls.speciesField = uicontrol( ...
+                'Parent', speciesLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Enable', 'off');
+            Button( ...
+                'Parent', speciesLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
                 'TooltipString', 'Species Help', ...
                 'Callback', @obj.onSelectedSpeciesHelp);
-            Button( ...
+            set(speciesLayout, 'Widths', [70 -1 22]);
+            
+            preparationLayout = uix.HBox( ...
                 'Parent', parametersLayout, ...
+                'Spacing', 7);
+            Label( ...
+                'Parent', preparationLayout, ...
+                'String', 'Preparation:');
+            obj.parametersControls.preparationField = uicontrol( ...
+                'Parent', preparationLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Enable', 'off');
+            Button( ...
+                'Parent', preparationLayout, ...
                 'Icon', App.getResource('icons', 'help.png'), ...
                 'TooltipString', 'Preparation Help', ...
                 'Callback', @obj.onSelectedPreparationHelp);
-            set(parametersLayout, ...
-                'Widths', [70 -1 22], ...
-                'Heights', [23 23 23 23 23 23]);
+            set(preparationLayout, 'Widths', [70 -1 22]);
+            
+            set(parametersLayout, 'Heights', [23 23 23 23 23 23]);
 
             obj.converterControls.box = uix.BoxPanel( ...
                 'Parent', obj.mainLayout, ...
@@ -213,6 +264,10 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'RemovedConfigurationSetting', @obj.onDeviceChangedConfigurationSetting);
                 obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'AddedResource', @obj.onDeviceAddedResource);
             end
+            
+            if ~isempty(obj.stage) && regexpi(obj.stage.name, 'Microdisplay', 'once')
+                obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'SetBrightness', @obj.onStageSetBrightness);
+            end
         end
 
         function unbindDevices(obj)
@@ -232,26 +287,41 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         function populateParametersBox(obj)
             obj.populateDeviceList();
             obj.populateNdfs();
-            obj.populateGain();
+            obj.populateGainOrBrightness();
             obj.populateLightPath();
             obj.populateSpecies();
             obj.populatePreparation();
         end
 
         function populateDeviceList(obj)
-            names = {};
-            values = {};
-            for i = 1:numel(obj.allDevices)
-                device = obj.allDevices{i};
-                names{end + 1} = device.name;
-                values{end + 1} = device;
+            names = cell(1, numel(obj.leds));
+            values = cell(1, numel(obj.leds));
+            for i = 1:numel(obj.leds)
+                led = obj.leds{i};
+                names{i} = led.name;
+                values{i} = struct('device', led, 'setting', 'none');
+            end
+            
+            if ~isempty(obj.stage)
+                if regexpi(obj.stage.name, 'Microdisplay', 'once')
+                    colors = {'white', 'red', 'green', 'blue'};
+                elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
+                    colors = {'auto', 'red', 'green', 'blue'};
+                else
+                    colors = {'none'};
+                end
+                for i = 1:numel(colors)
+                    c = colors{i};
+                    names{end + 1} = [obj.stage.name ' - ' c]; %#ok<AGROW>
+                    values{end + 1} = struct('device', obj.stage, 'setting', c); %#ok<AGROW>
+                end
             end
 
             if numel(obj.allDevices) > 0
                 set(obj.parametersControls.devicePopupMenu, 'String', names);
                 set(obj.parametersControls.devicePopupMenu, 'Values', values);
             else
-                set(obj.parametersControls.devicePopupMenu, 'String', {' '});
+                set(obj.parametersControls.devicePopupMenu, 'String', {'(None)'});
                 set(obj.parametersControls.devicePopupMenu, 'Values', {[]});
             end
             set(obj.parametersControls.devicePopupMenu, 'Enable', appbox.onOff(numel(obj.allDevices) > 0));
@@ -259,7 +329,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
 
         function onSelectedDevice(obj, ~, ~)
             obj.populateNdfs();
-            obj.populateGain();
+            obj.populateGainOrBrightness();
             obj.populateLightPath();
             obj.populateConverterBox();
             obj.pack();
@@ -271,11 +341,11 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
 
         function populateNdfs(obj)
-            device = get(obj.parametersControls.devicePopupMenu, 'Value');
-            if isempty(device)
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(v)
                 set(obj.parametersControls.ndfsField, 'String', '');
             else
-                ndfs = device.getConfigurationSetting('ndfs');
+                ndfs = v.device.getConfigurationSetting('ndfs');
                 set(obj.parametersControls.ndfsField, 'String', strjoin(ndfs, '; '));
             end
         end
@@ -286,14 +356,40 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'Configurator'' module.'], 'NDFs Help');
         end
 
-        function populateGain(obj)
-            device = get(obj.parametersControls.devicePopupMenu, 'Value');
-            if isempty(device) || device == obj.stage
+        function populateGainOrBrightness(obj)
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(v)
+                set(obj.parametersControls.brightnessField, 'String', '');
+                set(obj.parametersControls.brightnessField, 'String', '');
+                set(obj.parametersControls.settingCardPanel, 'Selection', 2);
+            elseif v.device == obj.stage
                 set(obj.parametersControls.gainField, 'String', '');
+                if ismethod(v.device, 'getBrightness')
+                    set(obj.parametersControls.brightnessField, 'String', char(v.device.getBrightness()));
+                else
+                    set(obj.parametersControls.brightnessField, 'String', 'N/A');
+                end
+                set(obj.parametersControls.settingCardPanel, 'Selection', 2);
             else
-                gain = device.getConfigurationSetting('gain');
-                set(obj.parametersControls.gainField, 'String', gain);
+                if v.device.hasConfigurationSetting('gain')
+                    set(obj.parametersControls.gainField, 'String', v.device.getConfigurationSetting('gain'));
+                else
+                    set(obj.parametersControls.gainField, 'String', 'N/A');
+                end
+                set(obj.parametersControls.brightnessField, 'String', '');
+                set(obj.parametersControls.settingCardPanel, 'Selection', 1);
             end
+        end
+        
+        function onStageSetBrightness(obj, handle, ~)
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if handle ~= v.device
+                return;
+            end
+            
+            obj.populateGainOrBrightness();
+            obj.populateConverterBox();
+            obj.pack();
         end
 
         function onSelectedGainHelp(obj, ~, ~)
@@ -302,12 +398,18 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 'Configurator'' module.'], 'Gain Help');
         end
         
+        function onSelectedBrightnessHelp(obj, ~, ~)
+            obj.view.showMessage(['The brightness field is auto-populated by the value of the ''brightness'' ' ...
+                'setting on the Stage device. Brightness settings may be changed through the specific ''Stage ' ...
+                'Control'' module.'], 'Brightness Help');
+        end
+        
         function populateLightPath(obj)
-            device = get(obj.parametersControls.devicePopupMenu, 'Value');
-            if isempty(device)
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(v)
                 set(obj.parametersControls.lightPathField, 'String', '');
             else
-                path = device.getConfigurationSetting('lightPath');
+                path = v.device.getConfigurationSetting('lightPath');
                 set(obj.parametersControls.lightPathField, 'String', path);
             end
         end
@@ -466,8 +568,16 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 return;
             end
             
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            units = v.device.background.baseUnits;
+            if strcmp(units, 'V')
+                units = 'volts';
+            else strcmp(units, symphonyui.core.Measurement.UNITLESS);
+                units = 'intensity';
+            end
+            
             photoreceptors = obj.species.getResource('photoreceptors');
-            keys = [{} {'volts'} photoreceptors.keys];
+            keys = [{} {units} photoreceptors.keys];
             for i = 1:numel(keys)
                 k = keys{i};
                 layout = uix.HBox( ...
@@ -503,24 +613,22 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         
         function [tf, msg] = isValid(obj)
             msg = '';
-            device = get(obj.parametersControls.devicePopupMenu, 'Value');
-            if isempty(device)
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if isempty(v) || isempty(v.device)
                 msg = 'Device must not be empty';
-            elseif ~any(strcmp('spectrum', device.getResourceNames()))
+            elseif ~any(strcmp('spectrum', v.device.getResourceNames()))
                 msg = 'Device is missing spectrum';
-            elseif ~any(strcmp('ndfAttenuations', device.getResourceNames()))
+            elseif ~any(strcmp('ndfAttenuations', v.device.getResourceNames()))
                 msg = 'Device is missing ndf attentuations';
-            elseif ~any(strcmp('fluxFactors', device.getResourceNames()))
+            elseif ~any(strcmp('fluxFactors', v.device.getResourceNames()))
                 msg = 'Device must be calibrated';
-            elseif ~device.hasConfigurationSetting('ndfs')
+            elseif ~v.device.hasConfigurationSetting('ndfs')
                 msg = 'Device is missing ndfs setting';
-            elseif device ~= obj.stage && ~device.hasConfigurationSetting('gain')
-                msg = 'Device is missing gain setting';
-            elseif device ~= obj.stage && isempty(device.getConfigurationSetting('gain'))
+            elseif v.device.hasConfigurationSetting('gain') && isempty(v.device.getConfigurationSetting('gain'))
                 msg = 'Gain must not be empty';
-            elseif ~device.hasConfigurationSetting('lightPath')
+            elseif ~v.device.hasConfigurationSetting('lightPath')
                 msg = 'Device is missing light path setting';
-            elseif isempty(device.getConfigurationSetting('lightPath'))
+            elseif isempty(v.device.getConfigurationSetting('lightPath'))
                 msg = 'Light path must not be empty';
             elseif isempty(obj.species)
                 msg = 'Species must not be empty';
@@ -538,13 +646,12 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
             value = char(field.jcontrol.getText());
             
-            device = get(obj.parametersControls.devicePopupMenu, 'Value');
-            spectrum = device.getResource('spectrum');
-            attenuations = device.getResource('ndfAttenuations');
-            fluxFactors = device.getResource('fluxFactors');
-            ndfs = device.getConfigurationSetting('ndfs');
-            gain = device.getConfigurationSetting('gain');
-            path = device.getConfigurationSetting('lightPath');
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            spectrum = v.device.getResource('spectrum');
+            attenuations = v.device.getResource('ndfAttenuations');
+            fluxFactors = v.device.getResource('fluxFactors');
+            ndfs = v.device.getConfigurationSetting('ndfs');
+            path = v.device.getConfigurationSetting('lightPath');
             photoreceptors = obj.species.getResource('photoreceptors');
             prep = obj.preparation.getProperty('preparation');
             orientations = obj.preparation.getResource('photoreceptorOrientations');
@@ -552,6 +659,27 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 orientation = orientations(prep);
             else
                 orientation = '';
+            end
+            units = v.device.background.baseUnits;
+            if strcmp(units, 'V')
+                units = 'volts';
+            else strcmp(units, symphonyui.core.Measurement.UNITLESS);
+                units = 'intensity';
+            end
+            
+            if v.device == obj.stage
+                spectrum = spectrum(v.setting);
+                attenuations = attenuations(v.setting);
+                if ismethod(v.device, 'getBrightness')
+                    fluxFactors = fluxFactors(char(v.device.getBrightness));
+                end
+                factor = fluxFactors(v.setting);
+            else
+                if v.device.hasConfigurationSetting('gain')
+                    factor = fluxFactors(v.device.getConfigurationSetting('gain'));
+                else
+                    factor = fluxFactors('none');
+                end
             end
             
             function a = getCollectingArea(map, path, orientation)
@@ -567,14 +695,14 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 end
             end
             
-            if strcmp(event.fieldName, 'volts')
-                volts = str2double(value);
+            if strcmp(event.fieldName, units)
+                voltsOrIntensity = str2double(value);
             else
                 isom = str2double(value);
                 collectingArea = getCollectingArea(photoreceptors(event.fieldName).collectingArea, path, orientation);
-                volts = edu.washington.riekelab.util.convisom(isom, 'isom', fluxFactors(gain), spectrum, ...
+                voltsOrIntensity = edu.washington.riekelab.util.convisom(isom, 'isom', factor, spectrum, ...
                     photoreceptors(event.fieldName).spectrum, collectingArea, ndfs, attenuations);
-                set(obj.converterControls.fields('volts').control, 'String', num2str(volts, '%.4f'));
+                set(obj.converterControls.fields(units).control, 'String', num2str(voltsOrIntensity, '%.4f'));
             end
             
             names = photoreceptors.keys;
@@ -582,7 +710,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             for i = 1:numel(names)
                 n = names{i};
                 collectingArea = getCollectingArea(photoreceptors(n).collectingArea, path, orientation);
-                isom = edu.washington.riekelab.util.convisom(volts, 'volts', fluxFactors(gain), spectrum, ...
+                isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, spectrum, ...
                     photoreceptors(n).spectrum, collectingArea, ndfs, attenuations);
                 set(obj.converterControls.fields(n).control, 'String', num2str(isom, '%.0f'));
             end
@@ -607,14 +735,15 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
         
         function onDeviceChangedConfigurationSetting(obj, handle, event)
-            if handle ~= get(obj.parametersControls.devicePopupMenu, 'Value')
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if handle ~= v.device
                 return;
             end
             
             setting = event.data;
             if any(strcmp(setting.name, {'ndfs', 'gain', 'lightPath'}))
                 obj.populateNdfs();
-                obj.populateGain();
+                obj.populateGainOrBrightness();
                 obj.populateLightPath();
                 obj.populateConverterBox();
                 obj.pack();
@@ -622,7 +751,8 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
         end
         
         function onDeviceAddedResource(obj, handle, event)
-            if handle ~= get(obj.parametersControls.devicePopupMenu, 'Value')
+            v = get(obj.parametersControls.devicePopupMenu, 'Value');
+            if handle ~= v.device
                 return;
             end
             

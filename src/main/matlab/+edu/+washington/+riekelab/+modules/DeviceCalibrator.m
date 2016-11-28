@@ -918,6 +918,11 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 for k = 1:numel(settings)
                     factors(settings{k}) = cal(settings{k}).factor;
                 end
+                if device == obj.stage && regexpi(obj.stage.name, 'Microdisplay', 'once')
+                    factors('minimum') = 0;
+                    factors('maximum') = 0;
+                    factors = calculateFactorsFromSpectrum(factors, device.getResource('spectrum'));
+                end
                 device.addResource('fluxFactors', factors);
                 
                 if ~obj.previousCalibrations.isKey(name)
@@ -1007,3 +1012,28 @@ classdef DeviceCalibrator < symphonyui.ui.Module
     
 end
 
+function factors = calculateFactorsFromSpectrum(factors, spectrum)
+    import edu.washington.*;
+
+    r = spectrum('red');
+    g = spectrum('green');
+    b = spectrum('blue');
+    
+    r(:,2) = riekelab.util.lowPassFilter(r(:,2), 25, 1/numel(r(:,2)));
+    g(:,2) = riekelab.util.lowPassFilter(g(:,2), 25, 1/numel(g(:,2)));
+    b(:,2) = riekelab.util.lowPassFilter(b(:,2), 25, 1/numel(b(:,2)));
+    
+    ri = trapz(r(:,1), r(:,2));
+    gi = trapz(g(:,1), g(:,2));
+    bi = trapz(b(:,1), b(:,2));
+    wi = ri + gi + bi;
+    
+    keys = factors.keys;
+    for i = 1:numel(keys)
+        k = keys{i};
+        f = factors(k);
+        factors(k) = containers.Map( ...
+            {'white', 'red', 'green', 'blue'}, ...
+            {f*(wi/wi), f*(ri/wi), f*(gi/wi), f*(bi/wi)});
+    end
+end

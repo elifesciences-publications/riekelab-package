@@ -1,5 +1,9 @@
 classdef MicrodisplayDevice < symphonyui.core.Device
     
+    events (NotifyAccess = private)
+        SetBrightness
+    end
+    
     properties (Access = private, Transient)
         stageClient
         microdisplay
@@ -148,6 +152,8 @@ classdef MicrodisplayDevice < symphonyui.core.Device
             
             ramp = obj.gammaRampForBrightness(brightness);
             obj.stageClient.setMonitorGammaRamp(ramp, ramp, ramp);
+            
+            notify(obj, 'SetBrightness', symphonyui.core.CoreEventData(brightness));
         end
         
         function b = getBrightness(obj)
