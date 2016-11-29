@@ -53,6 +53,7 @@ classdef LightCrafterDevice < symphonyui.core.Device
             
             obj.addConfigurationSetting('canvasSize', canvasSize, 'isReadOnly', true);
             obj.addConfigurationSetting('trueCanvasSize', trueCanvasSize, 'isReadOnly', true);
+            obj.addConfigurationSetting('centerOffset', [0 0], 'isReadOnly', true);
             obj.addConfigurationSetting('monitorRefreshRate', refreshRate, 'isReadOnly', true);
             obj.addConfigurationSetting('prerender', false, 'isReadOnly', true);
             obj.addConfigurationSetting('lightCrafterLedEnables',  [auto, red, green, blue], 'isReadOnly', true);
@@ -81,6 +82,16 @@ classdef LightCrafterDevice < symphonyui.core.Device
             s = obj.getConfigurationSetting('trueCanvasSize');
         end
         
+        function setCenterOffset(obj, o)
+            delta = o - obj.getCenterOffset();
+            obj.stageClient.setCanvasProjectionTranslate(delta(1), delta(2), 0);
+            obj.setReadOnlyConfigurationSetting('centerOffset', [o(1) o(2)]);
+        end
+        
+        function o = getCenterOffset(obj)
+            o = obj.getConfigurationSetting('centerOffset');
+        end
+        
         function r = getMonitorRefreshRate(obj)
             r = obj.getConfigurationSetting('monitorRefreshRate');
         end
@@ -95,17 +106,18 @@ classdef LightCrafterDevice < symphonyui.core.Device
         
         function play(obj, presentation)
             canvasSize = obj.getCanvasSize();
+            centerOffset = obj.getCenterOffset();
             
             background = stage.builtin.stimuli.Rectangle();
             background.size = canvasSize;
-            background.position = canvasSize/2;
+            background.position = canvasSize/2 - centerOffset;
             background.color = presentation.backgroundColor;
             presentation.setBackgroundColor(0);
             presentation.insertStimulus(1, background);
             
             tracker = stage.builtin.stimuli.Rectangle();
             tracker.size = [canvasSize(1) * 1/8, canvasSize(2)];
-            tracker.position = [canvasSize(1) - (canvasSize(1)/16), canvasSize(2)/2];
+            tracker.position = [canvasSize(1) - (canvasSize(1)/16), canvasSize(2)/2] - centerOffset;
             presentation.addStimulus(tracker);
             
             trackerColor = stage.builtin.controllers.PropertyController(tracker, 'color', @(s)mod(s.frame, 2) && double(s.time + (1/s.frameRate) < presentation.duration));
@@ -130,6 +142,21 @@ classdef LightCrafterDevice < symphonyui.core.Device
         
         function clearMemory(obj)
            obj.stageClient.clearMemory();
+        end
+        
+        function setSingleLedEnable(obj, setting)
+            switch lower(setting)
+                case 'auto'
+                    obj.setLedEnables(true, false, false, false);
+                case 'red'
+                    obj.setLedEnables(false, true, false, false);
+                case 'green'
+                    obj.setLedEnables(false, false, true, false);
+                case 'blue'
+                    obj.setLedEnables(false, false, false, true);
+                otherwise
+                    error('Unknown LED enable setting');
+            end
         end
         
         function setLedEnables(obj, auto, red, green, blue)
@@ -165,6 +192,11 @@ classdef LightCrafterDevice < symphonyui.core.Device
         function p = um2pix(obj, um)
             micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
             p = round(um / micronsPerPixel);
+        end
+        
+        function u = pix2um(obj, pix)
+            micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
+            u = pix * micronsPerPixel;
         end
         
     end

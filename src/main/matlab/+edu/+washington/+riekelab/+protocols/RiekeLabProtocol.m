@@ -25,7 +25,7 @@ classdef (Abstract) RiekeLabProtocol < symphonyui.core.Protocol
                 % Temperature readout from Warner TC-324B controller 100 mV/degree C.
                 temperature = mean(quantities) * 1000 * (1/100);
                 temperature = round(temperature * 10) / 10;
-                epoch.addParameter('bathTemperature', temperature);
+                epoch.addProperty('bathTemperature', temperature);
                 
                 epoch.removeResponse(controllers{1});
             end

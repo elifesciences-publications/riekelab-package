@@ -1,20 +1,29 @@
 classdef LightCrafterControl < symphonyui.ui.Module
     
     properties (Access = private)
+        log
+        settings
         lightCrafter
         ledEnablesCheckboxes
         patternRatePopupMenu
+        centerOffsetFields
         prerenderCheckbox
     end
     
     methods
+        
+        function obj = LightCrafterControl()
+            obj.log = log4m.LogManager.getLogger(class(obj));
+            obj.settings = edu.washington.riekelab.modules.settings.LightCrafterControlSettings();
+        end
         
         function createUi(obj, figureHandle)
             import appbox.*;
             
             set(figureHandle, ...
                 'Name', 'LightCrafter Control', ...
-                'Position', screenCenter(320, 105));
+                'Position', screenCenter(350, 135), ...
+                'Resize', 'off');
             
             mainLayout = uix.HBox( ...
                 'Parent', figureHandle, ...
@@ -30,6 +39,9 @@ classdef LightCrafterControl < symphonyui.ui.Module
             Label( ...
                 'Parent', lightCrafterLayout, ...
                 'String', 'Pattern rate:');
+            Label( ...
+                'Parent', lightCrafterLayout, ...
+                'String', 'Center offset (um):');
             Label( ...
                 'Parent', lightCrafterLayout, ...
                 'String', 'Prerender:');
@@ -64,6 +76,27 @@ classdef LightCrafterControl < symphonyui.ui.Module
                 'String', {' '}, ...
                 'HorizontalAlignment', 'left', ...
                 'Callback', @obj.onSelectedPatternRate);
+            offsetLayout = uix.HBox( ...
+                'Parent', lightCrafterLayout, ...
+                'Spacing', 5);
+            obj.centerOffsetFields.x = uicontrol( ...
+                'Parent', offsetLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Callback', @obj.onSetCenterOffset);
+            Label( ...
+                'Parent', offsetLayout, ...
+                'String', 'X');
+            obj.centerOffsetFields.y = uicontrol( ...
+                'Parent', offsetLayout, ...
+                'Style', 'edit', ...
+                'HorizontalAlignment', 'left', ...
+                'Callback', @obj.onSetCenterOffset);
+            Label( ...
+                'Parent', offsetLayout, ...
+                'String', 'Y');
+            set(offsetLayout, ...
+                'Widths', [-1 8+5 -1 8]);
             obj.prerenderCheckbox = uicontrol( ...
                 'Parent', lightCrafterLayout, ...
                 'Style', 'checkbox', ...
@@ -71,8 +104,8 @@ classdef LightCrafterControl < symphonyui.ui.Module
                 'Callback', @obj.onSelectedPrerender);
             
             set(lightCrafterLayout, ...
-                'Widths', [70 -1], ...
-                'Heights', [23 23 23]);
+                'Widths', [100 -1], ...
+                'Heights', [23 23 23 23]);
         end
         
     end
@@ -87,16 +120,31 @@ classdef LightCrafterControl < symphonyui.ui.Module
             
             obj.lightCrafter = devices{1};
             
-            obj.populateLedEnablesCheckboxes();
+            obj.populateLedEnables();
             obj.populatePatternRateList();
-            obj.populatePrerenderCheckbox();
+            obj.populateCenterOffset();
+            obj.populatePrerender();
+            
+            try
+                obj.loadSettings();
+            catch x
+                obj.log.debug(['Failed to load settings: ' x.message], x);
+            end
+        end
+        
+        function willStop(obj)
+            try
+                obj.saveSettings();
+            catch x
+                obj.log.debug(['Failed to save settings: ' x.message], x);
+            end
         end
         
     end
     
     methods (Access = private)
         
-        function populateLedEnablesCheckboxes(obj)
+        function populateLedEnables(obj)
             [auto, red, green, blue] = obj.lightCrafter.getLedEnables();
             set(obj.ledEnablesCheckboxes.auto, 'Value', auto);
             set(obj.ledEnablesCheckboxes.red, 'Value', red);
@@ -127,13 +175,42 @@ classdef LightCrafterControl < symphonyui.ui.Module
             obj.lightCrafter.setPatternRate(rate);
         end
         
-        function populatePrerenderCheckbox(obj)
+        function populateCenterOffset(obj)
+            offset = obj.lightCrafter.pix2um(obj.lightCrafter.getCenterOffset());
+            set(obj.centerOffsetFields.x, 'String', num2str(offset(1)));
+            set(obj.centerOffsetFields.y, 'String', num2str(offset(2)));
+        end
+        
+        function onSetCenterOffset(obj, ~, ~)
+            x = str2double(get(obj.centerOffsetFields.x, 'String'));
+            y = str2double(get(obj.centerOffsetFields.y, 'String'));
+            if isnan(x) || isnan(y)
+                obj.view.showError('Could not parse x or y to a valid scalar value.');
+                return;
+            end
+            obj.lightCrafter.setCenterOffset(obj.lightCrafter.um2pix([x, y]));
+        end
+        
+        function populatePrerender(obj)
             set(obj.prerenderCheckbox, 'Value', obj.lightCrafter.getPrerender());
         end
         
         function onSelectedPrerender(obj, ~, ~)
             prerender = get(obj.prerenderCheckbox, 'Value');
             obj.lightCrafter.setPrerender(prerender);
+        end
+        
+        function loadSettings(obj)
+            if ~isempty(obj.settings.viewPosition)
+                p1 = obj.view.position;
+                p2 = obj.settings.viewPosition;
+                obj.view.position = [p2(1) p2(2) p1(3) p1(4)];
+            end
+        end
+
+        function saveSettings(obj)
+            obj.settings.viewPosition = obj.view.position;
+            obj.settings.save();
         end
         
     end
