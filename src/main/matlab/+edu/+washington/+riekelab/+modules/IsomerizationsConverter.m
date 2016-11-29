@@ -265,7 +265,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
                 obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'AddedResource', @obj.onDeviceAddedResource);
             end
             
-            if ~isempty(obj.stage) && regexpi(obj.stage.name, 'Microdisplay', 'once')
+            if ~isempty(obj.stage) && ~isempty(regexpi(obj.stage.name, 'Microdisplay', 'once'))
                 obj.deviceListeners{end + 1} = obj.addListener(d{i}, 'SetBrightness', @obj.onStageSetBrightness);
             end
         end
@@ -303,9 +303,9 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             end
             
             if ~isempty(obj.stage)
-                if regexpi(obj.stage.name, 'Microdisplay', 'once')
+                if ~isempty(regexpi(obj.stage.name, 'Microdisplay', 'once'))
                     colors = {'white', 'red', 'green', 'blue'};
-                elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
+                elseif ~isempty(regexpi(obj.stage.name, 'LightCrafter', 'once'))
                     colors = {'auto', 'red', 'green', 'blue'};
                 else
                     colors = {'none'};

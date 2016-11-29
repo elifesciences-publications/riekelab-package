@@ -777,9 +777,9 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         function turnOnStage(obj, device, setting, intensity, diameter)
             try
                 if ~strcmpi(setting, 'none')
-                    if regexpi(obj.stage.name, 'Microdisplay', 'once')
+                    if ~isempty(regexpi(obj.stage.name, 'Microdisplay', 'once'))
                         obj.stage.setBrightness(setting);
-                    elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
+                    elseif ~isempty(regexpi(obj.stage.name, 'LightCrafter', 'once'))
                         obj.stage.setSingleLedEnable(setting);
                     end
                 end
@@ -812,9 +812,9 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             if isempty(obj.stage) || (~obj.isStageOn && ~force)
                 return;
             end
-            if regexpi(obj.stage.name, 'Microdisplay', 'once')
+            if ~isempty(regexpi(obj.stage.name, 'Microdisplay', 'once'))
                 obj.stage.setBrightness('minimum');
-            elseif regexpi(obj.stage.name, 'LightCrafter', 'once')
+            elseif ~isempty(regexpi(obj.stage.name, 'LightCrafter', 'once'))
                 obj.stage.setSingleLedEnable('auto');
             end
             obj.stage.play(stage.core.Presentation(1/obj.stage.getMonitorRefreshRate())); %#ok<PROPLC>
@@ -918,7 +918,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 for k = 1:numel(settings)
                     factors(settings{k}) = cal(settings{k}).factor;
                 end
-                if device == obj.stage && regexpi(obj.stage.name, 'Microdisplay', 'once')
+                if device == obj.stage && ~isempty(regexpi(obj.stage.name, 'Microdisplay', 'once'))
                     factors('minimum') = 0;
                     factors('maximum') = 0;
                     factors = calculateFactorsFromSpectrum(factors, device.getResource('spectrum'));
