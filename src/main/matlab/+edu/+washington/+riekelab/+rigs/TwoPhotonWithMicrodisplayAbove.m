@@ -15,7 +15,7 @@ classdef TwoPhotonWithMicrodisplayAbove < edu.washington.riekelab.rigs.TwoPhoton
             ramps('medium')  = 65535 * importdata(riekelab.Package.getCalibrationResource('rigs', 'two_photon', 'microdisplay_above_medium_gamma_ramp.txt'));
             ramps('high')    = 65535 * importdata(riekelab.Package.getCalibrationResource('rigs', 'two_photon', 'microdisplay_above_high_gamma_ramp.txt'));
             ramps('maximum') = linspace(0, 65535, 256);
-            microdisplay = riekelab.devices.MicrodisplayDevice('gammaRamps', ramps, 'micronsPerPixel', 1, 'comPort', 'COM3');
+            microdisplay = riekelab.devices.MicrodisplayDevice('gammaRamps', ramps, 'micronsPerPixel', 1.1, 'comPort', 'COM3');
             microdisplay.bindStream(daq.getStream('doport1'));
             daq.getStream('doport1').setBitPosition(microdisplay, 15);
             microdisplay.addConfigurationSetting('ndfs', {}, ...
