@@ -552,8 +552,20 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             else
                 set(obj.calibrationCard.ledCard.calibrationUnitsField, 'String', led.background.displayUnits);
             end
-            set(obj.calibrationCard.ledCard.powerReadingField, 'String', '');
-            set(obj.calibrationCard.ledCard.noteField, 'String', '');
+            
+            calibration = [];
+            if obj.calibrations.isKey(led.name) && obj.calibrations(led.name).isKey(setting)
+                m = obj.calibrations(led.name);
+                calibration = m(setting);
+            end
+            if isempty(calibration)
+                set(obj.calibrationCard.ledCard.powerReadingField, 'String', '');
+                set(obj.calibrationCard.ledCard.noteField, 'String', '');
+            else
+                set(obj.calibrationCard.ledCard.spotDiameterField, 'String', num2str(calibration.diameter));
+                set(obj.calibrationCard.ledCard.powerReadingField, 'String', num2str(calibration.power));
+                set(obj.calibrationCard.ledCard.noteField, 'String', calibration.note);
+            end
             
             set(obj.calibrationCard.detailCardPanel, 'Selection', 1);
         end
@@ -564,8 +576,19 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Values', values);
             set(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Enable', appbox.onOff(~isempty(table)));
             set(obj.calibrationCard.stageCard.useButton, 'Enable', appbox.onOff(~isempty(table)));
-            set(obj.calibrationCard.stageCard.powerReadingField, 'String', '');
-            set(obj.calibrationCard.stageCard.noteField, 'String', '');
+            
+            calibration = [];
+            if obj.calibrations.isKey(stage.name) && obj.calibrations(stage.name).isKey(setting)
+                m = obj.calibrations(stage.name);
+                calibration = m(setting);
+            end
+            if isempty(calibration)
+                set(obj.calibrationCard.stageCard.powerReadingField, 'String', '');
+                set(obj.calibrationCard.stageCard.noteField, 'String', '');
+            else
+                set(obj.calibrationCard.stageCard.powerReadingField, 'String', num2str(calibration.power));
+                set(obj.calibrationCard.stageCard.noteField, 'String', calibration.note);
+            end
             
             set(obj.calibrationCard.detailCardPanel, 'Selection', 2);
         end
