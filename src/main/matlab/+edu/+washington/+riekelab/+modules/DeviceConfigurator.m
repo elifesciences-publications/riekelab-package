@@ -150,6 +150,29 @@ classdef DeviceConfigurator < symphonyui.ui.Module
                 availableNdfs = desc.type.domain;
                 activeNdfs = desc.value;
                 
+                if any(strcmp('ndfAttenuations', device.getResourceNames()))
+                    attenuations = device.getResource('ndfAttenuations');
+                    if attenuations.isKey('white')
+                        attenuations = attenuations('white');
+                    elseif attenuations.isKey('auto')
+                        attenuations = attenuations('auto');
+                    end
+                else
+                    attenuations = containers.Map();
+                end
+                for k = 1:numel(availableNdfs)
+                    ndf = availableNdfs{k};
+                    if attenuations.isKey(ndf)
+                        availableNdfs{k} = [ndf ' (' num2str(attenuations(ndf)) ')'];
+                    end
+                end
+                for k = 1:numel(activeNdfs)
+                    ndf = activeNdfs{k};
+                    if attenuations.isKey(ndf)
+                        activeNdfs{k} = [ndf ' (' num2str(attenuations(ndf)) ')'];
+                    end
+                end
+                
                 deviceLayout = uix.HBox( ...
                     'Parent', ndfsLayout, ...
                     'Spacing', 7);
@@ -190,6 +213,15 @@ classdef DeviceConfigurator < symphonyui.ui.Module
         function onSelectedNdfs(obj, ~, event)
             device = event.device;
             ndfs = event.ndfs;
+            
+            for i = 1:numel(ndfs)
+                k = strfind(ndfs{i}, ' (');
+                if ~isempty(k)
+                    ndf = ndfs{i};
+                    ndfs{i} = ndf(1:k(end)-1);
+                end
+            end
+            
             try
                 device.setConfigurationSetting('ndfs', ndfs);
             catch x
