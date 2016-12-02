@@ -636,7 +636,11 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
         end
         
-        function viewPreviousCalibrationTable(obj, device, setting)
+        function viewPreviousCalibrationTable(obj, device, setting, selectedDate)
+            if nargin < 4
+                selectedDate = [];
+            end
+            
             import appbox.*;
             
             f = figure( ...
@@ -654,6 +658,11 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Parent', f);
             
             table = obj.getPreviousCalibrationTable(device, setting);
+            if isempty(selectedDate)
+                selectedRow = [];
+            else
+                selectedRow = find(table.date == selectedDate, 1);
+            end
             table.date = datestr(table.date, 'dd-mmm-yyyy HH:MM PM');
             table.factor = [];
             columnNames = cellfun(@(n)humanize(n), table.Properties.VariableNames, 'UniformOutput', false);
@@ -661,6 +670,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 'Parent', mainLayout, ...
                 'ColumnName', columnNames, ...
                 'Data', table2cell(table), ...
+                'SelectedRows', selectedRow, ...
                 'BorderType', 'none', ...
                 'Editable', 'off');
             
@@ -669,7 +679,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         
         function onSelectedLedView(obj, ~, ~)
             [device, setting] = obj.getSelectedDevice();
-            obj.viewPreviousCalibrationTable(device, setting);
+            entry = get(obj.calibrationCard.ledCard.useCalibrationPopupMenu, 'Value');
+            obj.viewPreviousCalibrationTable(device, setting, entry.date);
         end
         
         function onSelectedLedUse(obj, ~, ~)
@@ -819,7 +830,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         
         function onSelectedStageView(obj, ~, ~)
             [device, setting] = obj.getSelectedDevice();
-            obj.viewPreviousCalibrationTable(device, setting);
+            entry = get(obj.calibrationCard.stageCard.useCalibrationPopupMenu, 'Value');
+            obj.viewPreviousCalibrationTable(device, setting, entry.date);
         end
         
         function onSelectedStageUse(obj, ~, ~)
