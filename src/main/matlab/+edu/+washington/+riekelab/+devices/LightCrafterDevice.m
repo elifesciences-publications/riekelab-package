@@ -74,6 +74,13 @@ classdef LightCrafterDevice < symphonyui.core.Device
             end
         end
         
+        function v = getConfigurationSetting(obj, name)
+            % TODO: This is a faster version of Device.getConfigurationSetting(). It should be moved to Device.
+            
+            v = obj.tryCoreWithReturn(@()obj.cobj.Configuration.Item(name));
+            v = obj.valueFromPropertyValue(convert(v));
+        end
+        
         function s = getCanvasSize(obj)
             s = obj.getConfigurationSetting('canvasSize');
         end
@@ -203,3 +210,37 @@ classdef LightCrafterDevice < symphonyui.core.Device
     
 end
 
+function v = convert(dotNetValue)
+    % TODO: Remove when getConfigurationSetting() is removed from this class.
+
+    v = dotNetValue;
+    if ~isa(v, 'System.Object')
+        return;
+    end
+    
+    clazz = strtok(class(dotNetValue), '[');
+    switch clazz
+        case 'System.Int16'
+            v = int16(v);
+        case 'System.UInt16'
+            v = uint16(v);
+        case 'System.Int32'
+            v = int32(v);
+        case 'System.UInt32'
+            v = uint32(v);
+        case 'System.Int64'
+            v = int64(v);
+        case 'System.UInt64'
+            v = uint64(v);
+        case 'System.Single'
+            v = single(v);
+        case 'System.Double'
+            v = double(v);
+        case 'System.Boolean'
+            v = logical(v);
+        case 'System.Byte'
+            v = uint8(v);
+        case {'System.Char', 'System.String'}
+            v = char(v);
+    end
+end
