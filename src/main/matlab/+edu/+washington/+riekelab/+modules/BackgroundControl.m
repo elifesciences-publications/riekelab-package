@@ -3,6 +3,8 @@ classdef BackgroundControl < symphonyui.ui.Module
     properties (Access = private)
         log
         settings
+        toolbar
+        turnLedsOffTool
         devices
         deviceListeners
         deviceGrid
@@ -22,7 +24,12 @@ classdef BackgroundControl < symphonyui.ui.Module
                 'Name', 'Background Control', ...
                 'Position', screenCenter(290, 100));
             
-            mainLayout = uix.HBox( ...
+            obj.toolbar = Menu(figureHandle);
+            obj.turnLedsOffTool = obj.toolbar.addPushTool( ...
+                'Label', 'Turn LEDs Off', ...
+                'Callback', @obj.onSelectedTurnLedsOff);
+            
+            mainLayout = uix.VBox( ...
                 'Parent', figureHandle);
             
             obj.deviceGrid = uiextras.jide.PropertyGrid(mainLayout, ...
@@ -98,6 +105,16 @@ classdef BackgroundControl < symphonyui.ui.Module
             end
             
             obj.deviceGrid.UpdateProperties(fields);
+        end
+        
+        function onSelectedTurnLedsOff(obj, ~, ~)
+            obj.deviceGrid.StopEditing();
+            leds = obj.configurationService.getDevices('LED');
+            for i = 1:numel(leds)
+                led = leds{i};
+                led.background = symphonyui.core.Measurement(-1, led.background.displayUnits);
+                led.applyBackground();
+            end
         end
         
         function onSetBackground(obj, ~, event)
