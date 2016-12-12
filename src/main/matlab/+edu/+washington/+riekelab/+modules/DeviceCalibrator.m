@@ -569,7 +569,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             
             calibration = [];
-            if obj.calibrations.isKey(led.name) && obj.calibrations(led.name).isKey(setting)
+            if ~isempty(led) && obj.calibrations.isKey(led.name) && obj.calibrations(led.name).isKey(setting)
                 m = obj.calibrations(led.name);
                 calibration = m(setting);
             end
