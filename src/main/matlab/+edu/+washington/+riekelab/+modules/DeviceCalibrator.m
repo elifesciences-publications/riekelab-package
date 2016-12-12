@@ -810,7 +810,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 obj.isLedOn = true;
             catch x
                 obj.view.showError(['Unable to turn on LED: ' x.message]);
-                led.background = symphonyui.core.Measurement(0, led.background.displayUnits);
+                led.background = symphonyui.core.Measurement(-1, led.background.displayUnits);
                 obj.isLedOn = false;
                 return;
             end
@@ -822,7 +822,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             end
             for i = 1:numel(obj.leds)
                 led = obj.leds{i};
-                led.background = symphonyui.core.Measurement(0, led.background.displayUnits);
+                led.background = symphonyui.core.Measurement(-1, led.background.displayUnits);
                 led.applyBackground();
             end
             obj.isLedOn = false;
