@@ -59,6 +59,11 @@ classdef BackgroundControl < symphonyui.ui.Module
             end
         end
         
+        function didStop(obj)
+            obj.toolbar.close();
+            obj.deviceGrid.Close();
+        end
+        
         function bind(obj)
             bind@symphonyui.ui.Module(obj);
             
