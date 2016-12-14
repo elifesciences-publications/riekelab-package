@@ -117,8 +117,13 @@ classdef BackgroundControl < symphonyui.ui.Module
             leds = obj.configurationService.getDevices('LED');
             for i = 1:numel(leds)
                 led = leds{i};
-                led.background = symphonyui.core.Measurement(-1, led.background.displayUnits);
-                led.applyBackground();
+                if strcmp(led.background.baseUnits, 'V')
+                    led.background = symphonyui.core.Measurement(-1, led.background.displayUnits);
+                    led.applyBackground();
+                else
+                    led.background = symphonyui.core.Measurement(0, led.background.displayUnits);
+                    led.applyBackground();
+                end
             end
         end
         
