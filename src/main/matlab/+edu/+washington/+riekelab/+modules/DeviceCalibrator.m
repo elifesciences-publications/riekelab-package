@@ -5,6 +5,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
         stage
         isLedOn
         isStageOn
+        isCalibrating
         didShowWarning
         calibrations
         previousCalibrations
@@ -136,15 +137,22 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(calibrateLayout, 'Widths', [85 -1 -1]);
             
             ledOnLayout = uix.HBox( ...
-                'Parent', ledLayout);
+                'Parent', ledLayout, ...
+                'Spacing', 5);
             uix.Empty('Parent', ledOnLayout);
+            obj.calibrationCard.ledCard.resetButton = uicontrol( ...
+                'Parent', ledOnLayout, ...
+                'Style', 'pushbutton', ...
+                'String', 'Reset', ...
+                'Interruptible', 'off', ...
+                'Callback', @obj.onSelectedLedReset);
             obj.calibrationCard.ledCard.ledOnButton = uicontrol( ...
                 'Parent', ledOnLayout, ...
                 'Style', 'togglebutton', ...
                 'String', 'LED On', ...
                 'Interruptible', 'off', ...
                 'Callback', @obj.onSelectedLedOn);
-            set(ledOnLayout, 'Widths', [-1 75]);
+            set(ledOnLayout, 'Widths', [-1 75 75]);
             
             spotLayout = uix.HBox( ...
                 'Parent', ledLayout, ...
@@ -282,15 +290,22 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(spotLayout, 'Widths', [85 -1 -1]);
             
             stageOnLayout = uix.HBox( ...
-                'Parent', stageLayout);
+                'Parent', stageLayout, ...
+                'Spacing', 5);
             uix.Empty('Parent', stageOnLayout);
+            obj.calibrationCard.stageCard.resetButton = uicontrol( ...
+                'Parent', stageOnLayout, ...
+                'Style', 'pushbutton', ...
+                'String', 'Reset', ...
+                'Interruptible', 'off', ...
+                'Callback', @obj.onSelectedStageReset);
             obj.calibrationCard.stageCard.stageOnButton = uicontrol( ...
                 'Parent', stageOnLayout, ...
                 'Style', 'togglebutton', ...
                 'String', 'Stage On', ...
                 'Interruptible', 'off', ...
                 'Callback', @obj.onSelectedStageOn);
-            set(stageOnLayout, 'Widths', [-1 75]);
+            set(stageOnLayout, 'Widths', [-1 75 75]);
             
             powerLayout = uix.HBox( ...
                 'Parent', stageLayout, ...
@@ -392,6 +407,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             
             obj.isLedOn = false;
             obj.isStageOn = false;
+            obj.isCalibrating = false;
             obj.didShowWarning = false;
             
             obj.calibrations = containers.Map();
@@ -777,6 +793,13 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             set(obj.calibrationCard.deviceListBox, 'Values', values);
         end
         
+        function onSelectedLedReset(obj, ~, ~)
+            obj.turnOffAllDevices();
+            set(obj.calibrationCard.ledCard.powerReadingField, 'String', '');
+            obj.isCalibrating = false;
+            obj.updateStateOfControls();
+        end
+        
         function onSelectedLedOn(obj, ~, ~)
             obj.turnOffAllDevices();
             
@@ -784,13 +807,8 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             if turnOn
                 [led, setting] = obj.getSelectedDevice();
                 intensity = str2double(get(obj.calibrationCard.ledCard.calibrationIntensityField, 'String'));
-                obj.turnOnLed(led, setting, intensity);
-                
-                if isempty(get(obj.calibrationCard.ledCard.spotDiameterField, 'String'))
-                    uicontrol(obj.calibrationCard.ledCard.spotDiameterField);
-                else
-                    uicontrol(obj.calibrationCard.ledCard.powerReadingField);
-                end
+                obj.turnOnLed(led, setting, intensity);                
+                obj.isCalibrating = true;
             end
             
             obj.updateStateOfControls();
@@ -861,6 +879,13 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             obj.updateStateOfControls();
         end
         
+        function onSelectedStageReset(obj, ~, ~)
+            obj.turnOffAllDevices();
+            set(obj.calibrationCard.stageCard.powerReadingField, 'String', '');
+            obj.isCalibrating = false;
+            obj.updateStateOfControls();
+        end
+        
         function onSelectedStageOn(obj, ~, ~)
             obj.turnOffAllDevices();
             
@@ -870,8 +895,7 @@ classdef DeviceCalibrator < symphonyui.ui.Module
                 intensity = str2double(get(obj.calibrationCard.stageCard.calibrationIntensityField, 'String'));
                 diameter = str2double(get(obj.calibrationCard.stageCard.spotDiameterField, 'String'));
                 obj.turnOnStage(device, setting, intensity, diameter);
-                
-                uicontrol(obj.calibrationCard.stageCard.powerReadingField);
+                obj.isCalibrating = true;
             end
             
             obj.updateStateOfControls();
@@ -1088,20 +1112,22 @@ classdef DeviceCalibrator < symphonyui.ui.Module
             allCalibrated = all(cellfun(@(s)obj.isDeviceCalibrated(s.device, s.setting), ...
                 get(obj.calibrationCard.deviceListBox, 'Values')));
             
-            set(obj.calibrationCard.ledCard.calibrationIntensityField, 'Enable', onOff(hasDevice && ~obj.isLedOn));
+            set(obj.calibrationCard.ledCard.calibrationIntensityField, 'Enable', onOff(hasDevice && ~obj.isCalibrating));
+            set(obj.calibrationCard.ledCard.resetButton, 'Enable', onOff(hasDevice && obj.isCalibrating));
             set(obj.calibrationCard.ledCard.ledOnButton, 'Enable', onOff(hasDevice));
             set(obj.calibrationCard.ledCard.ledOnButton, 'Value', obj.isLedOn);
-            set(obj.calibrationCard.ledCard.spotDiameterField, 'Enable', onOff(hasDevice && obj.isLedOn));
-            set(obj.calibrationCard.ledCard.powerReadingField, 'Enable', onOff(hasDevice && obj.isLedOn));
-            set(obj.calibrationCard.ledCard.noteField, 'Enable', onOff(hasDevice && obj.isLedOn));
-            set(obj.calibrationCard.ledCard.submitButton, 'Enable', onOff(hasDevice && obj.isLedOn));
-            set(obj.calibrationCard.stageCard.calibrationIntensityField, 'Enable', onOff(hasDevice && ~obj.isStageOn));
-            set(obj.calibrationCard.stageCard.spotDiameterField, 'Enable', onOff(hasDevice && ~obj.isStageOn));
+            set(obj.calibrationCard.ledCard.spotDiameterField, 'Enable', onOff(hasDevice && obj.isCalibrating));
+            set(obj.calibrationCard.ledCard.powerReadingField, 'Enable', onOff(hasDevice && obj.isCalibrating));
+            set(obj.calibrationCard.ledCard.noteField, 'Enable', onOff(hasDevice && obj.isCalibrating));
+            set(obj.calibrationCard.ledCard.submitButton, 'Enable', onOff(hasDevice && obj.isCalibrating));
+            set(obj.calibrationCard.stageCard.calibrationIntensityField, 'Enable', onOff(hasDevice && ~obj.isCalibrating));
+            set(obj.calibrationCard.stageCard.resetButton, 'Enable', onOff(hasDevice && obj.isCalibrating));
+            set(obj.calibrationCard.stageCard.spotDiameterField, 'Enable', onOff(hasDevice && ~obj.isCalibrating));
             set(obj.calibrationCard.stageCard.stageOnButton, 'Enable', onOff(hasDevice));
             set(obj.calibrationCard.stageCard.stageOnButton, 'Value', obj.isStageOn);
-            set(obj.calibrationCard.stageCard.powerReadingField, 'Enable', onOff(hasDevice && obj.isStageOn));
-            set(obj.calibrationCard.stageCard.noteField, 'Enable', onOff(hasDevice && obj.isStageOn));
-            set(obj.calibrationCard.stageCard.submitButton, 'Enable', onOff(hasDevice && obj.isStageOn));
+            set(obj.calibrationCard.stageCard.powerReadingField, 'Enable', onOff(hasDevice && obj.isCalibrating));
+            set(obj.calibrationCard.stageCard.noteField, 'Enable', onOff(hasDevice && obj.isCalibrating));
+            set(obj.calibrationCard.stageCard.submitButton, 'Enable', onOff(hasDevice && obj.isCalibrating));
             set(obj.backButton, 'Enable', onOff(isLastCard));
             set(obj.nextButton, 'Enable', onOff(~isLastCard || allCalibrated));
             if isLastCard
