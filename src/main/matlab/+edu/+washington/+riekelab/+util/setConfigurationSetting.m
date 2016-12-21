@@ -20,7 +20,9 @@ function setConfigurationSetting(entity, name, value, deviceName)
         deviceName = {};
     end
 
-    if isa(entity, 'symphonyui.core.persistent.EpochGroup')
+    if isa(entity, 'symphonyui.core.persistent.Experiment')
+        signals = getSignalsFromExperiment(entity);
+    elseif isa(entity, 'symphonyui.core.persistent.EpochGroup')
         signals = getSignalsFromEpochGroup(entity);
     elseif isa(entity, 'symphonyui.core.persistent.EpochBlock')
         signals = getSignalsFromEpochBlock(entity);
@@ -97,5 +99,13 @@ function s = getSignalsFromEpochGroup(group)
     children = group.getEpochGroups();
     for i = 1:numel(children)
         s = [s getSignalsFromEpochGroup(children{i})]; %#ok<AGROW>
+    end
+end
+
+function s = getSignalsFromExperiment(experiment)
+    s = {};
+    groups = experiment.getEpochGroups();
+    for i = 1:numel(groups)
+        s = [s getSignalsFromEpochGroup(groups{i})]; %#ok<AGROW>
     end
 end
