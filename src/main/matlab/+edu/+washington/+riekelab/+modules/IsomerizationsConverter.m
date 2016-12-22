@@ -619,7 +619,7 @@ classdef IsomerizationsConverter < symphonyui.ui.Module
             elseif ~any(strcmp('spectrum', v.device.getResourceNames()))
                 msg = 'Device is missing spectrum';
             elseif ~any(strcmp('ndfAttenuations', v.device.getResourceNames()))
-                msg = 'Device is missing ndf attentuations';
+                msg = 'Device is missing ndf attenuations';
             elseif ~any(strcmp('fluxFactors', v.device.getResourceNames()))
                 msg = 'Device must be calibrated';
             elseif ~v.device.hasConfigurationSetting('ndfs')

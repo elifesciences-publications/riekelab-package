@@ -31,7 +31,7 @@ function setConfigurationSetting(entity, name, value, deviceName)
     elseif isa(entity, 'symphonyui.core.persistent.IoBase')
         signals = {entity};
     else
-        error('Entity must be a persistent epoch group, epoch block, epoch or signal')
+        error('Entity must be a persistent experiment, epoch group, epoch block, epoch or signal')
     end
     
     if iscell(name)
