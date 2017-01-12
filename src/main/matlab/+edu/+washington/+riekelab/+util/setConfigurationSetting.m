@@ -3,22 +3,18 @@ function setConfigurationSetting(entity, name, value, deviceName)
     %
     % Examples:
     %
-    % % Set the 'gain' configuration setting to 'medium' on all IO in an epoch entity:
-    % setConfigurationSetting(epoch, 'gain', 'low');
+    % % Set the 'gain' configuration setting to 'low' on only IO from 'Red LED' in an epoch entity:
+    % setConfigurationSetting(epoch, 'gain', 'low', 'Red LED');
     %
-    % % Set the 'ndfs' configuration setting to {'F1', 'F2'} on all IO in an epoch entity:
-    % setConfigurationSetting(epoch, 'ndfs', {'F1', 'F2'});
+    % % Set the 'ndfs' configuration setting to {'F1', 'F2'} on only IO from 'Red LED' in an epoch entity:
+    % setConfigurationSetting(epoch, 'ndfs', {'F1', 'F2'}, 'Red LED');
     %
-    % % Set the 'gain' configuration setting to 'medium' on only IO from 'Red LED' and 'Green LED' in an epoch entity:
+    % % Set the 'gain' configuration setting to 'low' on only IO from 'Red LED' and 'Green LED' in an epoch entity:
     % setConfigurationSetting(epoch, 'gain', 'low', {'Red LED', 'Green LED'});
     %
     % % Set the 'gain' and 'lightPath' configuration setting to 'medium' and 'above' respectively on only IO from 
     % % 'Red LED' and 'Green LED' in an epoch group entity:
     % setConfigurationSetting(epochGroup, {'gain', 'lightPath'}, {'medium', 'above'}, {'Red LED', 'Green LED'});
-
-    if nargin < 4
-        deviceName = {};
-    end
 
     if isa(entity, 'symphonyui.core.persistent.Experiment')
         signals = getSignalsFromExperiment(entity);
@@ -57,7 +53,7 @@ function setConfigurationSetting(entity, name, value, deviceName)
     for i = 1:numel(signals)
         signal = signals{i};
         
-        if ~isempty(deviceNames) && ~any(strcmp(signal.device.name, deviceNames))
+        if ~any(strcmp(signal.device.name, deviceNames))
             continue;
         end
         
