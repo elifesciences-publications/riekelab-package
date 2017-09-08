@@ -45,6 +45,16 @@ classdef SharedTwoPhotonWithLightCrafterAbove < edu.washington.riekelab.rigs.Sha
             
             frameMonitor = UnitConvertingDevice('Frame Monitor', 'V').bindStream(daq.getStream('ai7'));
             obj.addDevice(frameMonitor);
+            
+            % Add the filter wheel.
+            filterWheel = edu.washington.riekelab.devices.FilterWheelDevice('comPort', 'COM4');
+            
+            % Binding the filter wheel to an unused stream only so its configuration settings are written to each epoch.
+            daq = obj.daqController;
+            filterWheel.bindStream(daq.getStream('doport1'));
+            daq.getStream('doport1').setBitPosition(filterWheel, 15);
+            
+            obj.addDevice(filterWheel);
         end
         
     end
