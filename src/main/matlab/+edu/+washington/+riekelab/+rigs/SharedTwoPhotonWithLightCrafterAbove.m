@@ -9,7 +9,7 @@ classdef SharedTwoPhotonWithLightCrafterAbove < edu.washington.riekelab.rigs.Sha
             
             daq = obj.daqController;
             
-            lightCrafter = riekelab.devices.LightCrafterDevice('micronsPerPixel', 1.3);
+            lightCrafter = riekelab.devices.LightCrafterDevice('micronsPerPixel', 0.97);
             lightCrafter.bindStream(daq.getStream('doport1'));
             daq.getStream('doport1').setBitPosition(lightCrafter, 15);
             lightCrafter.addConfigurationSetting('ndfs', {}, ...
