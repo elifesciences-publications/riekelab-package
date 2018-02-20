@@ -1,5 +1,9 @@
 classdef (Abstract) RiekeLabStageProtocol < edu.washington.riekelab.protocols.RiekeLabProtocol
     
+    properties (Access = protected)
+        waitingForHardwareToStart
+    end
+    
     methods (Abstract)
         p = createPresentation(obj);
     end
@@ -8,6 +12,8 @@ classdef (Abstract) RiekeLabStageProtocol < edu.washington.riekelab.protocols.Ri
         
         function prepareEpoch(obj, epoch)
             prepareEpoch@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, epoch);
+            
+            obj.waitingForHardwareToStart = true;
             epoch.shouldWaitForTrigger = true;
             
             frameMonitor = obj.rig.getDevices('Frame Monitor');
@@ -18,7 +24,11 @@ classdef (Abstract) RiekeLabStageProtocol < edu.washington.riekelab.protocols.Ri
         
         function controllerDidStartHardware(obj)
             controllerDidStartHardware@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
-            obj.rig.getDevice('Stage').play(obj.createPresentation());
+            
+            if obj.waitingForHardwareToStart
+                obj.waitingForHardwareToStart = false;
+                obj.rig.getDevice('Stage').play(obj.createPresentation());
+            end
         end
         
         function tf = shouldContinuePreloadingEpochs(obj) %#ok<MANU>

@@ -120,6 +120,14 @@ classdef LedPulseFamily < edu.washington.riekelab.protocols.RiekeLabProtocol
             end
         end
         
+        function updateLedPulseFigure(obj, epoch)
+            
+        end
+        
+        function updateRodFlashFigure(obj, epoch)
+            
+        end
+        
         function prepareInterval(obj, interval)
             prepareInterval@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, interval);
             
